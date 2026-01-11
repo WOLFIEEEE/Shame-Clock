@@ -37,7 +37,31 @@ export const DEFAULT_CONFIG = {
   // Tracking settings
   trackAllSites: false,
   resetDaily: true,
-  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  
+  // Pause/Resume
+  trackingPaused: false,
+  pausedAt: null,
+  pauseScheduledEnd: null,
+  
+  // Snooze settings
+  snoozeDuration: 5 * 60 * 1000, // 5 minutes default snooze
+  snoozeEnabled: true,
+  
+  // Popup customization
+  popupPosition: 'top-right', // top-left, top-right, bottom-left, bottom-right, center
+  popupStyle: 'default', // default, minimal, detailed
+  popupSound: false,
+  popupSoundVolume: 0.5,
+  
+  // Data retention
+  dataRetentionDays: 30,
+  autoCleanup: true,
+  
+  // Accessibility
+  highContrastMode: false,
+  reducedMotion: false,
+  fontSize: 'medium' // small, medium, large
 };
 
 export const STORAGE_KEYS = {
@@ -47,6 +71,18 @@ export const STORAGE_KEYS = {
   USER_SITES: 'userSites',
   LAST_POPUP_TIME: 'lastPopupTime',
   LAST_POPUP_DOMAIN: 'lastPopupDomain',
-  DAILY_RESET: 'dailyReset'
+  DAILY_RESET: 'dailyReset',
+  // New keys
+  ONBOARDING_STATE: 'onboardingState',
+  ERROR_LOG: 'errorLog',
+  GOALS: 'userGoals',
+  SCHEDULER: 'schedulerConfig',
+  BACKUP_HISTORY: 'backupHistory',
+  FOCUS_SESSIONS: 'focusSessions',
+  SHORTCUTS: 'keyboardShortcuts',
+  I18N: 'i18nConfig',
+  SNOOZE_UNTIL: 'snoozeUntil',
+  PAGE_RULES: 'pageRules',
+  AI_MODEL_STATUS: 'aiModelStatus'
 };
 

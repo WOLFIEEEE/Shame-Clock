@@ -6,22 +6,41 @@ import {
   saveUserSites,
   getTimeData,
   clearStorage,
-  setStorageValue
+  setStorageValue,
+  getStorageValue
 } from '../utils/storage.js';
-import { DEFAULT_CONFIG } from '../utils/config.js';
+import { DEFAULT_CONFIG, STORAGE_KEYS } from '../utils/config.js';
 import { getAllPersonas } from '../ai/personas.js';
 import { refreshSites } from '../utils/site-matcher.js';
 
-const browserAPI = typeof chrome !== 'undefined' && chrome.runtime ? chrome : browser;
+// Browser API abstraction - ensure it's always available
+function getBrowserAPI() {
+  if (typeof chrome !== 'undefined' && chrome.runtime) {
+    return chrome;
+  }
+  if (typeof browser !== 'undefined' && browser.runtime) {
+    return browser;
+  }
+  console.error('Browser API not available');
+  return null;
+}
+
+const browserAPI = getBrowserAPI();
 
 let defaultSites = [];
 let userSites = [];
 let personas = [];
+let currentOnboardingStep = 0;
+const totalOnboardingSteps = 5;
 
 const TAB_INFO = {
   dashboard: {
     title: 'Dashboard',
     description: 'Comprehensive view of your browsing activity and time management insights.'
+  },
+  goals: {
+    title: 'Goals',
+    description: 'Set time limits and track your progress toward mindful browsing.'
   },
   sites: {
     title: 'Monitored Sites',
@@ -35,6 +54,14 @@ const TAB_INFO = {
     title: 'Interaction Logic',
     description: 'Configure how and when Shame Clock intervenes in your browsing.'
   },
+  schedule: {
+    title: 'Schedule',
+    description: 'Set quiet hours, work hours, and customize when tracking is active.'
+  },
+  focus: {
+    title: 'Focus Sessions',
+    description: 'Track productive focus time with the Pomodoro technique.'
+  },
   privacy: {
     title: 'Your Data Sovereignty',
     description: 'Everything stays local. We don\'t have servers, so we can\'t see your data.'
@@ -44,18 +71,82 @@ const TAB_INFO = {
 // Initialize page
 async function init() {
   await loadData();
+  await checkOnboarding();
   setupEventListeners();
   renderDashboard();
   renderSites();
   renderPersonas();
   renderSettings();
+  renderGoals();
+  renderSchedule();
+  renderFocusStats();
+}
+
+// Check if onboarding is needed
+async function checkOnboarding() {
+  try {
+    const onboardingState = await getStorageValue('onboardingState');
+    
+    if (!onboardingState || (!onboardingState.completed && !onboardingState.skipped)) {
+      showOnboarding();
+    }
+  } catch (error) {
+    console.error('Error checking onboarding:', error);
+  }
+}
+
+// Show onboarding overlay
+function showOnboarding() {
+  document.getElementById('onboarding-overlay').style.display = 'flex';
+  updateOnboardingStep(0);
+}
+
+// Hide onboarding overlay
+function hideOnboarding() {
+  document.getElementById('onboarding-overlay').style.display = 'none';
+}
+
+// Update onboarding step
+function updateOnboardingStep(step) {
+  currentOnboardingStep = step;
+  
+  // Update progress bar
+  const progress = ((step + 1) / totalOnboardingSteps) * 100;
+  document.getElementById('onboarding-progress-bar').style.width = `${progress}%`;
+  
+  // Hide all steps
+  for (let i = 1; i <= totalOnboardingSteps; i++) {
+    const stepEl = document.getElementById(`onboarding-step-${i}`);
+    if (stepEl) {
+      stepEl.classList.remove('active');
+    }
+  }
+  
+  // Show current step
+  const currentStepEl = document.getElementById(`onboarding-step-${step + 1}`);
+  if (currentStepEl) {
+    currentStepEl.classList.add('active');
+  }
+  
+  // Update buttons
+  const prevBtn = document.getElementById('onboarding-prev');
+  const nextBtn = document.getElementById('onboarding-next');
+  
+  prevBtn.style.display = step > 0 ? 'inline-flex' : 'none';
+  nextBtn.textContent = step === totalOnboardingSteps - 1 ? 'Get Started' : 'Next';
 }
 
 // Load data
 async function loadData() {
   // Load default sites
   try {
-    const response = await fetch(browserAPI.runtime.getURL('data/default-sites.json'));
+    const api = getBrowserAPI();
+    if (!api || !api.runtime) {
+      console.error('Browser API not available');
+      defaultSites = [];
+      return;
+    }
+    const response = await fetch(api.runtime.getURL('data/default-sites.json'));
     defaultSites = await response.json();
   } catch (error) {
     console.error('Error loading default sites:', error);
@@ -108,8 +199,57 @@ function setupEventListeners() {
   // Export data
   document.getElementById('export-data-btn').addEventListener('click', exportData);
   
+  // Import data
+  document.getElementById('import-data-btn').addEventListener('click', () => {
+    document.getElementById('import-file-input').click();
+  });
+  
+  document.getElementById('import-file-input').addEventListener('change', importData);
+  
   // Clear data
   document.getElementById('clear-data-btn').addEventListener('click', clearAllData);
+  
+  // Onboarding buttons
+  document.getElementById('onboarding-skip').addEventListener('click', async () => {
+    await setStorageValue('onboardingState', { completed: false, skipped: true, tutorialShown: true });
+    hideOnboarding();
+  });
+  
+  document.getElementById('onboarding-prev').addEventListener('click', () => {
+    if (currentOnboardingStep > 0) {
+      updateOnboardingStep(currentOnboardingStep - 1);
+    }
+  });
+  
+  document.getElementById('onboarding-next').addEventListener('click', async () => {
+    if (currentOnboardingStep < totalOnboardingSteps - 1) {
+      updateOnboardingStep(currentOnboardingStep + 1);
+    } else {
+      await setStorageValue('onboardingState', { completed: true, skipped: false, tutorialShown: true });
+      hideOnboarding();
+    }
+  });
+  
+  // Goals
+  document.getElementById('goal-type').addEventListener('change', (e) => {
+    const siteRow = document.getElementById('goal-site-row');
+    siteRow.style.display = e.target.value === 'site_limit' ? 'flex' : 'none';
+  });
+  
+  document.getElementById('add-goal-btn').addEventListener('click', addGoal);
+  
+  // Focus session buttons
+  document.getElementById('start-focus-btn')?.addEventListener('click', startFocusSession);
+  document.getElementById('focus-stop-btn')?.addEventListener('click', stopFocusSession);
+  document.getElementById('focus-pause-btn')?.addEventListener('click', pauseFocusSession);
+  
+  // Focus preset buttons
+  document.querySelectorAll('.focus-preset-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.focus-preset-btn').forEach(b => b.classList.remove('selected'));
+      e.target.classList.add('selected');
+    });
+  });
 }
 
 // Switch tabs
@@ -156,6 +296,16 @@ function switchTab(tabName) {
       clearInterval(window.dashboardRefreshInterval);
       window.dashboardRefreshInterval = null;
     }
+  }
+  
+  // Render tab-specific content
+  if (tabName === 'goals') {
+    renderGoals();
+  } else if (tabName === 'focus') {
+    renderFocusStats();
+    updateFocusSessionUI();
+  } else if (tabName === 'schedule') {
+    renderSchedule();
   }
 }
 
@@ -221,8 +371,21 @@ async function getWeeklyStats() {
 // Render dashboard
 async function renderDashboard() {
   try {
+    // Ensure browser API is available
+    const api = getBrowserAPI();
+    if (!api || !api.runtime) {
+      console.error('Browser API not available');
+      document.getElementById('dashboard-sites-list').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">⚠️</div>
+          <p>Browser API not available. Please reload the extension.</p>
+        </div>
+      `;
+      return;
+    }
+    
     // Get today's stats
-    const response = await browserAPI.runtime.sendMessage({ action: 'getTodayStats' });
+    const response = await api.runtime.sendMessage({ action: 'getTodayStats' });
     const stats = response.stats || [];
     
     // Calculate total time
@@ -337,6 +500,276 @@ async function renderDashboard() {
   }
 }
 
+// Render goals
+async function renderGoals() {
+  try {
+    const api = getBrowserAPI();
+    if (!api || !api.runtime) {
+      console.error('Browser API not available');
+      return;
+    }
+    const response = await api.runtime.sendMessage({ action: 'getGoals' });
+    const goalsData = response.goals || { goals: [] };
+    const goalsList = document.getElementById('goals-list');
+    
+    // Populate site dropdown for site-specific goals
+    const siteSelect = document.getElementById('goal-site');
+    siteSelect.innerHTML = '<option value="">Select a site...</option>';
+    
+    const allSites = [...defaultSites.filter(s => s.enabled), ...userSites.map(s => ({ domain: s, name: s }))];
+    allSites.forEach(site => {
+      const option = document.createElement('option');
+      option.value = site.domain;
+      option.textContent = site.name || site.domain;
+      siteSelect.appendChild(option);
+    });
+    
+    if (goalsData.goals.length === 0) {
+      goalsList.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🎯</div>
+          <p>No goals set yet. Add one to get started!</p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Get progress for each goal
+    const progressResponse = await api.runtime.sendMessage({ action: 'getGoalProgress' });
+    const progress = progressResponse.progress || [];
+    
+    goalsList.innerHTML = goalsData.goals.map(goal => {
+      const goalProgress = progress.find(p => p.goalId === goal.id) || {
+        percentage: 0,
+        formatted: { current: '0m', remaining: goal.target + 'm' }
+      };
+      
+      const progressClass = goalProgress.exceeded ? 'exceeded' : goalProgress.percentage >= 80 ? 'warning' : '';
+      
+      return `
+        <div class="goal-item ${progressClass}">
+          <div class="goal-item-header">
+            <div class="goal-item-info">
+              <h4>${escapeHtml(goal.name)}</h4>
+              <p>${goal.domain ? escapeHtml(goal.domain) : 'All tracked sites'} • ${goal.target} min ${goal.type === 'weekly_limit' ? '/ week' : '/ day'}</p>
+            </div>
+            <button class="btn-icon delete-goal-btn" data-goal-id="${goal.id}" title="Delete goal">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+          <div class="goal-item-progress">
+            <div class="goal-progress-bar">
+              <div class="goal-progress-fill ${progressClass}" style="width: ${Math.min(100, goalProgress.percentage)}%"></div>
+            </div>
+            <div class="goal-progress-text">
+              <span>${goalProgress.formatted.current}</span>
+              <span>${Math.round(goalProgress.percentage)}%</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    // Add delete handlers
+    document.querySelectorAll('.delete-goal-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const goalId = e.currentTarget.dataset.goalId;
+        if (confirm('Delete this goal?')) {
+          const api = getBrowserAPI();
+          if (api && api.runtime) {
+            await api.runtime.sendMessage({ action: 'deleteGoal', goalId });
+            renderGoals();
+            showStatus('Goal deleted', 'success');
+          }
+        }
+      });
+    });
+  } catch (error) {
+    console.error('Error rendering goals:', error);
+  }
+}
+
+// Add goal
+async function addGoal() {
+  const type = document.getElementById('goal-type').value;
+  const target = parseInt(document.getElementById('goal-target').value);
+  const name = document.getElementById('goal-name').value.trim();
+  const site = document.getElementById('goal-site').value;
+  
+  if (!name) {
+    showStatus('Please enter a goal name', 'error');
+    return;
+  }
+  
+  if (target < 5 || target > 480) {
+    showStatus('Target must be between 5 and 480 minutes', 'error');
+    return;
+  }
+  
+  if (type === 'site_limit' && !site) {
+    showStatus('Please select a site', 'error');
+    return;
+  }
+  
+  try {
+    const api = getBrowserAPI();
+    if (!api || !api.runtime) {
+      showStatus('Browser API not available', 'error');
+      return;
+    }
+    await api.runtime.sendMessage({
+      action: 'addGoal',
+      goal: {
+        type,
+        target,
+        name,
+        domain: type === 'site_limit' ? site : null
+      }
+    });
+    
+    // Reset form
+    document.getElementById('goal-name').value = '';
+    document.getElementById('goal-target').value = '60';
+    
+    renderGoals();
+    showStatus('Goal added', 'success');
+  } catch (error) {
+    console.error('Error adding goal:', error);
+    showStatus('Failed to add goal', 'error');
+  }
+}
+
+// Render schedule settings
+async function renderSchedule() {
+  try {
+    const schedulerConfig = await getStorageValue('schedulerConfig');
+    const config = schedulerConfig || {
+      quickSettings: {
+        quietHoursEnabled: false,
+        quietHoursStart: '22:00',
+        quietHoursEnd: '08:00',
+        workHoursEnabled: false,
+        workHoursStart: '09:00',
+        workHoursEnd: '17:00',
+        weekendMode: false
+      }
+    };
+    
+    document.getElementById('quiet-hours-enabled').checked = config.quickSettings.quietHoursEnabled;
+    document.getElementById('quiet-hours-start').value = config.quickSettings.quietHoursStart;
+    document.getElementById('quiet-hours-end').value = config.quickSettings.quietHoursEnd;
+    document.getElementById('work-hours-enabled').checked = config.quickSettings.workHoursEnabled;
+    document.getElementById('work-hours-start').value = config.quickSettings.workHoursStart;
+    document.getElementById('work-hours-end').value = config.quickSettings.workHoursEnd;
+    document.getElementById('weekend-mode').checked = config.quickSettings.weekendMode;
+  } catch (error) {
+    console.error('Error rendering schedule:', error);
+  }
+}
+
+// Render focus stats
+async function renderFocusStats() {
+  try {
+    const api = getBrowserAPI();
+    if (!api || !api.runtime) {
+      console.error('Browser API not available');
+      return;
+    }
+    const response = await api.runtime.sendMessage({ action: 'getFocusStatus' });
+    const focusState = await getStorageValue('focusSessions');
+    
+    if (focusState && focusState.todayStats) {
+      document.getElementById('focus-total-time').textContent = formatTimeShort(focusState.todayStats.focusTime);
+      document.getElementById('focus-sessions-count').textContent = focusState.todayStats.sessionsCompleted;
+    }
+    
+    if (focusState && focusState.streak) {
+      document.getElementById('focus-streak').textContent = focusState.streak.current;
+    }
+    
+    // Update active session UI
+    updateFocusSessionUI();
+  } catch (error) {
+    console.error('Error rendering focus stats:', error);
+  }
+}
+
+// Update focus session UI
+async function updateFocusSessionUI() {
+  try {
+    const api = getBrowserAPI();
+    if (!api || !api.runtime) {
+      console.error('Browser API not available');
+      return;
+    }
+    const response = await api.runtime.sendMessage({ action: 'getFocusStatus' });
+    const status = response.status;
+    
+    const activeSection = document.getElementById('focus-session-active');
+    const startSection = document.getElementById('focus-session-start');
+    
+    if (status && status.active) {
+      activeSection.style.display = 'block';
+      startSection.style.display = 'none';
+      
+      document.getElementById('focus-session-timer').textContent = status.formatted.remaining;
+      document.getElementById('focus-progress-bar').style.width = `${status.progress}%`;
+    } else {
+      activeSection.style.display = 'none';
+      startSection.style.display = 'block';
+    }
+  } catch (error) {
+    console.error('Error updating focus session UI:', error);
+  }
+}
+
+// Start focus session
+async function startFocusSession() {
+  const selectedPreset = document.querySelector('.focus-preset-btn.selected');
+  const duration = selectedPreset ? parseInt(selectedPreset.dataset.duration) : 25;
+  
+  try {
+    const api = getBrowserAPI();
+    if (!api || !api.runtime) {
+      showStatus('Browser API not available', 'error');
+      return;
+    }
+    await api.runtime.sendMessage({
+      action: 'startFocusSession',
+      options: { duration: duration * 60 * 1000 }
+    });
+    updateFocusSessionUI();
+    showStatus('Focus session started!', 'success');
+  } catch (error) {
+    console.error('Error starting focus session:', error);
+    showStatus('Failed to start focus session', 'error');
+  }
+}
+
+// Stop focus session
+async function stopFocusSession() {
+  try {
+    const api = getBrowserAPI();
+    if (!api || !api.runtime) {
+      showStatus('Browser API not available', 'error');
+      return;
+    }
+    await api.runtime.sendMessage({ action: 'stopFocusSession' });
+    updateFocusSessionUI();
+    renderFocusStats();
+    showStatus('Focus session ended', 'info');
+  } catch (error) {
+    console.error('Error stopping focus session:', error);
+  }
+}
+
+// Pause focus session (placeholder)
+async function pauseFocusSession() {
+  showStatus('Pause feature coming soon', 'info');
+}
+
 // Render sites
 async function renderSites() {
   const defaultList = document.getElementById('default-sites-list');
@@ -359,17 +792,21 @@ async function renderSites() {
   `).join('');
   
   // Render user sites
-  userList.innerHTML = userSites.map(site => `
-    <div class="site-item">
-      <div class="site-item-info">
-        <span class="site-item-name">${escapeHtml(site)}</span>
-        <span class="site-item-domain">User domain</span>
+  if (userSites.length === 0) {
+    userList.innerHTML = '<p class="empty-hint">No custom sites added yet.</p>';
+  } else {
+    userList.innerHTML = userSites.map(site => `
+      <div class="site-item">
+        <div class="site-item-info">
+          <span class="site-item-name">${escapeHtml(site)}</span>
+          <span class="site-item-domain">User domain</span>
+        </div>
+        <div class="site-item-actions">
+          <button class="btn-remove" data-site="${escapeHtml(site)}">Remove</button>
+        </div>
       </div>
-      <div class="site-item-actions">
-        <button class="btn-remove" data-site="${escapeHtml(site)}">Remove</button>
-      </div>
-    </div>
-  `).join('');
+    `).join('');
+  }
   
   // Add event listeners
   defaultList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
@@ -430,7 +867,22 @@ async function renderSettings() {
   document.getElementById('min-time-popup').value = Math.floor((config.minTimeBeforePopup || DEFAULT_CONFIG.minTimeBeforePopup) / 60000);
   document.getElementById('popup-duration').value = Math.floor((config.popupDuration || DEFAULT_CONFIG.popupDuration) / 1000);
   document.getElementById('popup-cooldown').value = Math.floor((config.popupCooldown || DEFAULT_CONFIG.popupCooldown) / 60000);
+  document.getElementById('snooze-duration').value = Math.floor((config.snoozeDuration || DEFAULT_CONFIG.snoozeDuration) / 60000);
   document.getElementById('ai-enabled').checked = config.aiEnabled !== false;
+  
+  // Data retention
+  const dataRetention = document.getElementById('data-retention');
+  if (dataRetention) {
+    dataRetention.value = config.dataRetentionDays || 30;
+  }
+  
+  // Pomodoro settings
+  const focusState = await getStorageValue('focusSessions');
+  if (focusState && focusState.settings) {
+    document.getElementById('pomodoro-focus').value = Math.floor(focusState.settings.focusDuration / 60000);
+    document.getElementById('pomodoro-short-break').value = Math.floor(focusState.settings.shortBreakDuration / 60000);
+    document.getElementById('pomodoro-long-break').value = Math.floor(focusState.settings.longBreakDuration / 60000);
+  }
 }
 
 // Add user site
@@ -481,7 +933,14 @@ async function saveSettings() {
   config.minTimeBeforePopup = parseInt(document.getElementById('min-time-popup').value) * 60000;
   config.popupDuration = parseInt(document.getElementById('popup-duration').value) * 1000;
   config.popupCooldown = parseInt(document.getElementById('popup-cooldown').value) * 60000;
+  config.snoozeDuration = parseInt(document.getElementById('snooze-duration').value) * 60000;
   config.aiEnabled = document.getElementById('ai-enabled').checked;
+  
+  // Data retention
+  const dataRetention = document.getElementById('data-retention');
+  if (dataRetention) {
+    config.dataRetentionDays = parseInt(dataRetention.value);
+  }
   
   // Persona settings - collect from checked checkboxes
   const enabledPersonas = [];
@@ -496,10 +955,32 @@ async function saveSettings() {
   
   config.enabledPersonas = enabledPersonas;
   
-  // Sites state is handled via global objects during interaction in this simplified version
-  // but for reliability let's ensure we update any necessary defaults
-  
   await saveConfig(config);
+  
+  // Save schedule settings
+  const schedulerConfig = await getStorageValue('schedulerConfig') || { quickSettings: {} };
+  schedulerConfig.quickSettings = {
+    quietHoursEnabled: document.getElementById('quiet-hours-enabled').checked,
+    quietHoursStart: document.getElementById('quiet-hours-start').value,
+    quietHoursEnd: document.getElementById('quiet-hours-end').value,
+    workHoursEnabled: document.getElementById('work-hours-enabled').checked,
+    workHoursStart: document.getElementById('work-hours-start').value,
+    workHoursEnd: document.getElementById('work-hours-end').value,
+    weekendMode: document.getElementById('weekend-mode').checked,
+    workDays: [1, 2, 3, 4, 5]
+  };
+  await setStorageValue('schedulerConfig', schedulerConfig);
+  
+  // Save Pomodoro settings
+  const focusState = await getStorageValue('focusSessions') || { settings: {} };
+  focusState.settings = {
+    ...focusState.settings,
+    focusDuration: parseInt(document.getElementById('pomodoro-focus').value) * 60000,
+    shortBreakDuration: parseInt(document.getElementById('pomodoro-short-break').value) * 60000,
+    longBreakDuration: parseInt(document.getElementById('pomodoro-long-break').value) * 60000
+  };
+  await setStorageValue('focusSessions', focusState);
+  
   await refreshSites();
   
   showStatus('Preferences saved', 'success');
@@ -516,6 +997,7 @@ async function resetToDefaults() {
   renderSites();
   renderPersonas();
   renderSettings();
+  renderSchedule();
   showStatus('Reset complete', 'success');
 }
 
@@ -523,12 +1005,19 @@ async function resetToDefaults() {
 async function exportData() {
   const config = await getConfig();
   const timeData = await getTimeData();
-  const userSites = await getUserSites();
+  const userSitesData = await getUserSites();
+  const goalsData = await getStorageValue('userGoals');
+  const schedulerConfig = await getStorageValue('schedulerConfig');
+  const focusSessions = await getStorageValue('focusSessions');
   
   const exportData = {
+    version: '1.0',
     config: config,
     timeData: timeData,
-    userSites: userSites,
+    userSites: userSitesData,
+    goals: goalsData,
+    scheduler: schedulerConfig,
+    focusSessions: focusSessions,
     exportDate: new Date().toISOString()
   };
   
@@ -543,6 +1032,54 @@ async function exportData() {
   showStatus('Exported JSON', 'success');
 }
 
+// Import data
+async function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    
+    if (!data.version || !data.config) {
+      throw new Error('Invalid backup file');
+    }
+    
+    if (!confirm('Import will merge with existing data. Continue?')) {
+      return;
+    }
+    
+    // Restore data
+    if (data.config) await saveConfig(data.config);
+    if (data.userSites) await saveUserSites(data.userSites);
+    if (data.goals) await setStorageValue('userGoals', data.goals);
+    if (data.scheduler) await setStorageValue('schedulerConfig', data.scheduler);
+    if (data.focusSessions) await setStorageValue('focusSessions', data.focusSessions);
+    
+    // Merge time data
+    if (data.timeData) {
+      const existingData = await getTimeData();
+      const mergedData = { ...data.timeData, ...existingData };
+      await setStorageValue(STORAGE_KEYS.TIME_DATA, mergedData);
+    }
+    
+    await loadData();
+    renderSites();
+    renderPersonas();
+    renderSettings();
+    renderGoals();
+    renderSchedule();
+    
+    showStatus('Data imported', 'success');
+  } catch (error) {
+    console.error('Import error:', error);
+    showStatus('Failed to import: ' + error.message, 'error');
+  }
+  
+  // Reset file input
+  e.target.value = '';
+}
+
 // Clear all data
 async function clearAllData() {
   if (!confirm('Wipe all local tracking data? This is permanent.')) {
@@ -555,6 +1092,8 @@ async function clearAllData() {
   renderSites();
   renderPersonas();
   renderSettings();
+  renderGoals();
+  renderDashboard();
   showStatus('All data wiped', 'success');
 }
 

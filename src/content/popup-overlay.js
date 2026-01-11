@@ -64,6 +64,19 @@ async function getConfig() {
 }
 
 /**
+ * Snooze popups for a duration
+ * @param {number} duration - Duration in milliseconds
+ */
+async function snoozePopups(duration) {
+  return new Promise((resolve) => {
+    browserAPI.runtime.sendMessage({
+      action: 'snoozePopups',
+      duration: duration
+    }, resolve);
+  });
+}
+
+/**
  * Create and show popup overlay
  * @param {string} domain - Domain name
  * @param {number} timeSpent - Time spent in milliseconds
@@ -78,14 +91,16 @@ export async function showPopup(domain, timeSpent) {
     // Generate message via background script
     const messageData = await requestMessage(domain, timeSpent);
     
-    // Get config for popup duration
+    // Get config for popup duration and settings
     const config = await getConfig();
     const duration = (config.popupDuration || 30000);
+    const position = config.popupPosition || 'top-right';
+    const snoozeDuration = config.snoozeDuration || 5 * 60 * 1000;
     
     // Create popup element
     const popup = document.createElement('div');
     popup.id = 'shame-clock-popup';
-    popup.className = 'shame-clock-popup';
+    popup.className = `shame-clock-popup shame-clock-popup-${position}`;
     
     // Load CSS if not already loaded
     if (!document.getElementById('shame-clock-popup-styles')) {
@@ -114,9 +129,15 @@ export async function showPopup(domain, timeSpent) {
           <button class="shame-clock-popup-button shame-clock-popup-button-primary" data-action="productive">
             I'll be productive
           </button>
-          <button class="shame-clock-popup-button shame-clock-popup-button-secondary" data-action="dismiss">
+          <button class="shame-clock-popup-button shame-clock-popup-button-secondary" data-action="snooze">
+            Snooze ${Math.floor(snoozeDuration / 60000)}min
+          </button>
+          <button class="shame-clock-popup-button shame-clock-popup-button-tertiary" data-action="dismiss">
             Dismiss
           </button>
+        </div>
+        <div class="shame-clock-popup-timer">
+          <div class="shame-clock-popup-timer-bar" style="animation-duration: ${duration}ms;"></div>
         </div>
       </div>
     `;
@@ -138,6 +159,7 @@ export async function showPopup(domain, timeSpent) {
     // Event listeners
     const closeBtn = popup.querySelector('.shame-clock-popup-close');
     const productiveBtn = popup.querySelector('[data-action="productive"]');
+    const snoozeBtn = popup.querySelector('[data-action="snooze"]');
     const dismissBtn = popup.querySelector('[data-action="dismiss"]');
     
     closeBtn.addEventListener('click', () => {
@@ -151,6 +173,17 @@ export async function showPopup(domain, timeSpent) {
         action: 'popupAcknowledged',
         domain: domain,
         actionType: 'productive'
+      });
+    });
+    
+    snoozeBtn.addEventListener('click', async () => {
+      await snoozePopups(snoozeDuration);
+      removePopup();
+      // Notify background script
+      browserAPI.runtime.sendMessage({
+        action: 'popupSnoozed',
+        domain: domain,
+        duration: snoozeDuration
       });
     });
     

@@ -1,23 +1,78 @@
-// Local AI model loader using Transformers.js
+// Local AI model loader using Transformers.js with enhanced UX
 import { pipeline, env } from '@xenova/transformers';
+import { setStorageValue, getStorageValue } from '../utils/storage.js';
+
+const MODEL_STATUS_KEY = 'aiModelStatus';
 
 // Configure transformers
-// Note: First load will download from HuggingFace, then cache locally
-// Subsequent loads use the cached model
 env.allowLocalModels = true;
-env.allowRemoteModels = true; // Need to allow remote for initial download
-env.localModelPath = undefined; // Use default cache location
+env.allowRemoteModels = true;
+env.localModelPath = undefined;
 
 let model = null;
 let modelLoading = false;
 let modelLoadError = null;
+let loadProgress = 0;
+let progressListeners = [];
 
 /**
- * Load the local AI model
+ * Model status states
+ */
+export const ModelStatus = {
+  NOT_LOADED: 'not_loaded',
+  DOWNLOADING: 'downloading',
+  LOADING: 'loading',
+  READY: 'ready',
+  ERROR: 'error'
+};
+
+/**
+ * Get current model status from storage
+ * @returns {Promise<Object>}
+ */
+export async function getModelStatusFromStorage() {
+  const status = await getStorageValue(MODEL_STATUS_KEY);
+  return status || {
+    status: ModelStatus.NOT_LOADED,
+    progress: 0,
+    lastLoaded: null,
+    error: null,
+    modelName: 'Xenova/gpt2',
+    estimatedSize: '115 MB'
+  };
+}
+
+/**
+ * Save model status to storage
+ * @param {Object} status
+ */
+async function saveModelStatus(status) {
+  await setStorageValue(MODEL_STATUS_KEY, status);
+  // Notify listeners
+  progressListeners.forEach(listener => listener(status));
+}
+
+/**
+ * Add progress listener
+ * @param {Function} listener
+ * @returns {Function} - Cleanup function
+ */
+export function addProgressListener(listener) {
+  progressListeners.push(listener);
+  return () => {
+    progressListeners = progressListeners.filter(l => l !== listener);
+  };
+}
+
+/**
+ * Load the local AI model with progress tracking
+ * @param {Object} options
  * @returns {Promise<Object>} - Loaded model pipeline
  */
-export async function loadModel() {
-  if (model) {
+export async function loadModel(options = {}) {
+  const { forceReload = false } = options;
+  
+  if (model && !forceReload) {
     return model;
   }
   
@@ -32,35 +87,90 @@ export async function loadModel() {
   
   modelLoading = true;
   modelLoadError = null;
+  loadProgress = 0;
+  
+  const startTime = Date.now();
+  
+  await saveModelStatus({
+    status: ModelStatus.DOWNLOADING,
+    progress: 0,
+    lastLoaded: null,
+    error: null,
+    modelName: 'Xenova/gpt2',
+    estimatedSize: '115 MB',
+    startTime
+  });
   
   try {
-    // Use a lightweight text generation model
-    // For browser compatibility, we'll use a small model
-    // Note: In production, you might want to use WebLLM or a quantized model
     console.log('Loading AI model...');
     
-    // Using a text generation pipeline with a small model
-    // This is a placeholder - in production, use a properly quantized model
     model = await pipeline(
       'text-generation',
-      'Xenova/gpt2', // Small model for browser compatibility
+      'Xenova/gpt2',
       {
         quantized: true,
-        progress_callback: (progress) => {
+        progress_callback: async (progress) => {
           if (progress.status === 'progress') {
-            console.log(`Model loading: ${Math.round(progress.progress * 100)}%`);
+            loadProgress = Math.round(progress.progress * 100);
+            
+            await saveModelStatus({
+              status: ModelStatus.DOWNLOADING,
+              progress: loadProgress,
+              lastLoaded: null,
+              error: null,
+              modelName: 'Xenova/gpt2',
+              estimatedSize: '115 MB',
+              startTime,
+              file: progress.file,
+              loaded: progress.loaded,
+              total: progress.total
+            });
+            
+            console.log(`Model loading: ${loadProgress}%`);
+          } else if (progress.status === 'ready') {
+            await saveModelStatus({
+              status: ModelStatus.LOADING,
+              progress: 100,
+              lastLoaded: null,
+              error: null,
+              modelName: 'Xenova/gpt2',
+              estimatedSize: '115 MB',
+              startTime
+            });
           }
         }
       }
     );
     
-    console.log('AI model loaded successfully');
+    const loadTime = Date.now() - startTime;
+    
+    await saveModelStatus({
+      status: ModelStatus.READY,
+      progress: 100,
+      lastLoaded: new Date().toISOString(),
+      loadTimeMs: loadTime,
+      error: null,
+      modelName: 'Xenova/gpt2',
+      estimatedSize: '115 MB'
+    });
+    
+    console.log(`AI model loaded successfully in ${Math.round(loadTime / 1000)}s`);
     modelLoading = false;
     return model;
   } catch (error) {
     console.error('Error loading AI model:', error);
     modelLoadError = error;
     modelLoading = false;
+    
+    await saveModelStatus({
+      status: ModelStatus.ERROR,
+      progress: loadProgress,
+      lastLoaded: null,
+      error: error.message,
+      modelName: 'Xenova/gpt2',
+      estimatedSize: '115 MB'
+    });
+    
     throw error;
   }
 }
@@ -74,12 +184,37 @@ export function isModelLoaded() {
 }
 
 /**
+ * Check if model is loading
+ * @returns {boolean}
+ */
+export function isModelLoading() {
+  return modelLoading;
+}
+
+/**
+ * Get current load progress
+ * @returns {number}
+ */
+export function getLoadProgress() {
+  return loadProgress;
+}
+
+/**
  * Unload the model to free memory
  */
-export function unloadModel() {
+export async function unloadModel() {
   if (model) {
     model = null;
     console.log('AI model unloaded');
+    
+    await saveModelStatus({
+      status: ModelStatus.NOT_LOADED,
+      progress: 0,
+      lastLoaded: null,
+      error: null,
+      modelName: 'Xenova/gpt2',
+      estimatedSize: '115 MB'
+    });
   }
 }
 
@@ -91,7 +226,68 @@ export function getModelStatus() {
   return {
     loaded: model !== null,
     loading: modelLoading,
+    progress: loadProgress,
     error: modelLoadError ? modelLoadError.message : null
   };
 }
 
+/**
+ * Preload model in background
+ * @returns {Promise<void>}
+ */
+export async function preloadModelInBackground() {
+  // Load model without blocking
+  loadModel().catch(error => {
+    console.warn('Background model load failed:', error.message);
+  });
+}
+
+/**
+ * Clear model cache (requires browser restart to take effect)
+ * @returns {Promise<void>}
+ */
+export async function clearModelCache() {
+  // Clear IndexedDB cache for transformers.js
+  if (typeof indexedDB !== 'undefined') {
+    try {
+      await new Promise((resolve, reject) => {
+        const request = indexedDB.deleteDatabase('transformers-cache');
+        request.onsuccess = resolve;
+        request.onerror = reject;
+      });
+      console.log('Model cache cleared');
+    } catch (error) {
+      console.error('Error clearing model cache:', error);
+    }
+  }
+  
+  // Unload current model
+  await unloadModel();
+}
+
+/**
+ * Get estimated download size
+ * @returns {Object}
+ */
+export function getModelInfo() {
+  return {
+    name: 'GPT-2 Small (Quantized)',
+    size: '~115 MB',
+    description: 'A lightweight language model optimized for browser use.',
+    capabilities: ['Text generation', 'Message completion'],
+    requirements: {
+      browser: 'Chrome 80+, Firefox 80+, Edge 80+',
+      memory: '~200 MB RAM'
+    }
+  };
+}
+
+/**
+ * Check if model should auto-load
+ * @returns {Promise<boolean>}
+ */
+export async function shouldAutoLoad() {
+  const status = await getModelStatusFromStorage();
+  // Auto-load if it was previously loaded successfully
+  return status.status === ModelStatus.READY || status.lastLoaded !== null;
+}

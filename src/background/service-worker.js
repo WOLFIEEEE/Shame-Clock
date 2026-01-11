@@ -88,6 +88,21 @@ async function checkPopupTrigger() {
   const config = await getConfig();
   if (!config.popupEnabled) return;
   
+  // Check if tracking is paused
+  if (config.trackingPaused) return;
+  
+  // Check if popups are snoozed
+  const snoozeUntil = await getStorageValue(STORAGE_KEYS.SNOOZE_UNTIL);
+  if (snoozeUntil && Date.now() < snoozeUntil) return;
+  
+  // Check scheduler for popup suppression
+  try {
+    const { shouldSuppressPopups } = await import('../utils/scheduler.js');
+    if (await shouldSuppressPopups()) return;
+  } catch (e) {
+    // Scheduler not available, continue
+  }
+  
   try {
     const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
     if (tabs.length === 0) return;
@@ -102,7 +117,17 @@ async function checkPopupTrigger() {
     const timeSpent = await getTimeSpentToday(domain);
     
     // Check if enough time has passed
-    const minTime = config.minTimeBeforePopup || DEFAULT_CONFIG.minTimeBeforePopup;
+    let minTime = config.minTimeBeforePopup || DEFAULT_CONFIG.minTimeBeforePopup;
+    
+    // Apply scheduler threshold multiplier
+    try {
+      const { getCurrentThresholdMultiplier } = await import('../utils/scheduler.js');
+      const multiplier = await getCurrentThresholdMultiplier();
+      minTime = Math.round(minTime * multiplier);
+    } catch (e) {
+      // Scheduler not available, use default
+    }
+    
     if (timeSpent < minTime) return;
     
     // Check cooldown
@@ -112,6 +137,20 @@ async function checkPopupTrigger() {
     
     if (lastPopupDomain === domain && Date.now() - lastPopupTime < cooldown) {
       return; // Still in cooldown
+    }
+    
+    // Check goal notifications
+    try {
+      const { checkGoalNotifications } = await import('../utils/goals.js');
+      const goalNotifications = await checkGoalNotifications();
+      if (goalNotifications.length > 0) {
+        // Show goal notification instead
+        for (const notif of goalNotifications) {
+          await showNotification(notif.goalName, notif.message, domain);
+        }
+      }
+    } catch (e) {
+      // Goals not available
     }
     
     // Determine popup interval based on time spent
@@ -228,6 +267,198 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case 'getConfig':
           const config = await getConfig();
           sendResponse({ config });
+          break;
+        
+        // Pause/Resume tracking
+        case 'pauseTracking':
+          const pauseConfig = await getConfig();
+          pauseConfig.trackingPaused = true;
+          pauseConfig.pausedAt = Date.now();
+          await setStorageValue(STORAGE_KEYS.CONFIG, pauseConfig);
+          await handleTabInactive();
+          sendResponse({ success: true, paused: true });
+          break;
+        
+        case 'resumeTracking':
+          const resumeConfig = await getConfig();
+          resumeConfig.trackingPaused = false;
+          resumeConfig.pausedAt = null;
+          await setStorageValue(STORAGE_KEYS.CONFIG, resumeConfig);
+          // Re-check current tab
+          try {
+            const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
+            if (tabs.length > 0 && tabs[0].url) {
+              const isTracked = await isTrackedSite(tabs[0].url);
+              await updateActiveTab(tabs[0].id, tabs[0].url, isTracked !== null);
+            }
+          } catch (e) {
+            console.error('Error resuming tracking:', e);
+          }
+          sendResponse({ success: true, paused: false });
+          break;
+        
+        // Onboarding
+        case 'getOnboardingState':
+          const onboardingState = await getStorageValue('onboardingState');
+          sendResponse({ state: onboardingState || { completed: false, skipped: false } });
+          break;
+        
+        case 'skipOnboarding':
+          await setStorageValue('onboardingState', { 
+            completed: false, 
+            skipped: true, 
+            tutorialShown: true,
+            firstInstallDate: Date.now()
+          });
+          sendResponse({ success: true });
+          break;
+        
+        case 'completeOnboarding':
+          await setStorageValue('onboardingState', { 
+            completed: true, 
+            skipped: false,
+            tutorialShown: true,
+            firstInstallDate: Date.now()
+          });
+          sendResponse({ success: true });
+          break;
+        
+        // Goals
+        case 'getGoalProgress':
+          try {
+            const { getAllGoalProgress } = await import('../utils/goals.js');
+            const progress = await getAllGoalProgress();
+            sendResponse({ progress });
+          } catch (e) {
+            sendResponse({ progress: [] });
+          }
+          break;
+        
+        case 'getGoals':
+          try {
+            const { getGoals } = await import('../utils/goals.js');
+            const goals = await getGoals();
+            sendResponse({ goals });
+          } catch (e) {
+            sendResponse({ goals: { enabled: false, goals: [] } });
+          }
+          break;
+        
+        case 'addGoal':
+          try {
+            const { addGoal } = await import('../utils/goals.js');
+            const newGoal = await addGoal(message.goal);
+            sendResponse({ success: true, goal: newGoal });
+          } catch (e) {
+            sendResponse({ success: false, error: e.message });
+          }
+          break;
+        
+        case 'deleteGoal':
+          try {
+            const { deleteGoal } = await import('../utils/goals.js');
+            await deleteGoal(message.goalId);
+            sendResponse({ success: true });
+          } catch (e) {
+            sendResponse({ success: false, error: e.message });
+          }
+          break;
+        
+        // Focus Sessions
+        case 'getFocusStatus':
+          try {
+            const { getSessionStatus } = await import('../utils/focus-sessions.js');
+            const status = await getSessionStatus();
+            sendResponse({ status });
+          } catch (e) {
+            sendResponse({ status: { active: false } });
+          }
+          break;
+        
+        case 'startFocusSession':
+          try {
+            const { startFocusSession } = await import('../utils/focus-sessions.js');
+            const session = await startFocusSession(message.options || {});
+            sendResponse({ success: true, session });
+          } catch (e) {
+            sendResponse({ success: false, error: e.message });
+          }
+          break;
+        
+        case 'stopFocusSession':
+          try {
+            const { completeSession } = await import('../utils/focus-sessions.js');
+            const session = await completeSession();
+            sendResponse({ success: true, session });
+          } catch (e) {
+            sendResponse({ success: false, error: e.message });
+          }
+          break;
+        
+        // Scheduler
+        case 'getSchedulerStatus':
+          try {
+            const { getScheduleSummary } = await import('../utils/scheduler.js');
+            const summary = await getScheduleSummary();
+            sendResponse({ summary });
+          } catch (e) {
+            sendResponse({ summary: { enabled: false } });
+          }
+          break;
+        
+        case 'shouldSuppressPopups':
+          try {
+            const { shouldSuppressPopups } = await import('../utils/scheduler.js');
+            const suppress = await shouldSuppressPopups();
+            sendResponse({ suppress });
+          } catch (e) {
+            sendResponse({ suppress: false });
+          }
+          break;
+        
+        // Analytics
+        case 'getAnalytics':
+          try {
+            const { getAnalytics } = await import('../utils/analytics.js');
+            const analytics = await getAnalytics(message.period);
+            sendResponse({ analytics });
+          } catch (e) {
+            sendResponse({ analytics: null, error: e.message });
+          }
+          break;
+        
+        case 'getTrendAnalysis':
+          try {
+            const { getTrendAnalysis } = await import('../utils/analytics.js');
+            const trend = await getTrendAnalysis(message.days || 30);
+            sendResponse({ trend });
+          } catch (e) {
+            sendResponse({ trend: null, error: e.message });
+          }
+          break;
+        
+        // Backup
+        case 'createBackup':
+          try {
+            const { createBackup } = await import('../utils/backup.js');
+            const result = await createBackup(message.name);
+            sendResponse({ success: true, backup: result });
+          } catch (e) {
+            sendResponse({ success: false, error: e.message });
+          }
+          break;
+        
+        // Snooze
+        case 'snoozePopups':
+          const snoozeUntil = Date.now() + (message.duration || 5 * 60 * 1000);
+          await setStorageValue(STORAGE_KEYS.SNOOZE_UNTIL, snoozeUntil);
+          sendResponse({ success: true, snoozeUntil });
+          break;
+        
+        case 'getSnoozeStatus':
+          const snoozeEnd = await getStorageValue(STORAGE_KEYS.SNOOZE_UNTIL);
+          const isSnoozed = snoozeEnd && Date.now() < snoozeEnd;
+          sendResponse({ snoozed: isSnoozed, until: snoozeEnd });
           break;
         
         default:

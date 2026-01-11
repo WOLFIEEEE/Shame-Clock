@@ -7,6 +7,55 @@
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
+  <!-- Onboarding Overlay -->
+  <div id="onboarding-overlay" class="onboarding-overlay" style="display: none;">
+    <div class="onboarding-modal">
+      <div class="onboarding-header">
+        <div class="onboarding-progress">
+          <div id="onboarding-progress-bar" class="onboarding-progress-fill" style="width: 20%;"></div>
+        </div>
+        <button id="onboarding-skip" class="btn-link">Skip Tutorial</button>
+      </div>
+      
+      <div class="onboarding-content">
+        <div id="onboarding-step-1" class="onboarding-step active">
+          <div class="onboarding-icon">⏰</div>
+          <h2>Welcome to Shame Clock</h2>
+          <p>Your personal accountability companion for mindful browsing. We'll help you stay focused by tracking time on distracting sites.</p>
+        </div>
+        
+        <div id="onboarding-step-2" class="onboarding-step">
+          <div class="onboarding-icon">🌐</div>
+          <h2>Choose Your Distractions</h2>
+          <p>We've pre-selected common distracting sites. You can customize this list in the Monitored Sites section.</p>
+        </div>
+        
+        <div id="onboarding-step-3" class="onboarding-step">
+          <div class="onboarding-icon">🎭</div>
+          <h2>Pick Your Voice</h2>
+          <p>Choose who will remind you to stay focused: your future self, your mom, or historical figures.</p>
+        </div>
+        
+        <div id="onboarding-step-4" class="onboarding-step">
+          <div class="onboarding-icon">⚙️</div>
+          <h2>Set Your Limits</h2>
+          <p>Configure how long before you get reminded, and how often. You can adjust these anytime.</p>
+        </div>
+        
+        <div id="onboarding-step-5" class="onboarding-step">
+          <div class="onboarding-icon">🎉</div>
+          <h2>You're All Set!</h2>
+          <p>Start browsing mindfully. Visit any tracked site and we'll keep you accountable. Good luck!</p>
+        </div>
+      </div>
+      
+      <div class="onboarding-footer">
+        <button id="onboarding-prev" class="btn btn-secondary" style="display: none;">Back</button>
+        <button id="onboarding-next" class="btn btn-primary">Next</button>
+      </div>
+    </div>
+  </div>
+
   <div class="app-layout">
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
@@ -32,6 +81,14 @@
           </svg>
           <span class="nav-label">Dashboard</span>
         </button>
+        <button class="nav-item" data-tab="goals">
+          <svg class="nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="9" cy="9" r="4" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="9" cy="9" r="1" fill="currentColor"/>
+          </svg>
+          <span class="nav-label">Goals</span>
+        </button>
         <button class="nav-item" data-tab="sites">
           <span class="nav-icon sites-icon"></span>
           <span class="nav-label">Monitored Sites</span>
@@ -46,6 +103,19 @@
             <path d="M14.625 9C14.625 9.225 14.625 9.45 14.5875 9.675L15.75 10.8375C15.9 10.9875 15.9375 11.2125 15.825 11.4L14.775 12.975C14.6625 13.1625 14.4375 13.2375 14.25 13.1625L12.7875 12.6375C12.45 12.9375 12.075 13.1625 11.6625 13.3125L11.4375 14.85C11.4 15.075 11.2125 15.225 10.9875 15.225H7.0125C6.7875 15.225 6.6 15.075 6.5625 14.85L6.3375 13.3125C5.925 13.1625 5.55 12.9375 5.2125 12.6375L3.75 13.1625C3.5625 13.2375 3.3375 13.1625 3.225 12.975L2.175 11.4C2.0625 11.2125 2.1 10.9875 2.25 10.8375L3.4125 9.675C3.375 9.45 3.375 9.225 3.375 9C3.375 8.775 3.375 8.55 3.4125 8.325L2.25 7.1625C2.1 7.0125 2.0625 6.7875 2.175 6.6L3.225 5.025C3.3375 4.8375 3.5625 4.7625 3.75 4.8375L5.2125 5.3625C5.55 5.0625 5.925 4.8375 6.3375 4.6875L6.5625 3.15C6.6 2.925 6.7875 2.775 7.0125 2.775H10.9875C11.2125 2.775 11.4 2.925 11.4375 3.15L11.6625 4.6875C12.075 4.8375 12.45 5.0625 12.7875 5.3625L14.25 4.8375C14.4375 4.7625 14.6625 4.8375 14.775 5.025L15.825 6.6C15.9375 6.7875 15.9 7.0125 15.75 7.1625L14.5875 8.325C14.625 8.55 14.625 8.775 14.625 9Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <span class="nav-label">Behavior</span>
+        </button>
+        <button class="nav-item" data-tab="schedule">
+          <svg class="nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M9 5V9L12 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span class="nav-label">Schedule</span>
+        </button>
+        <button class="nav-item" data-tab="focus">
+          <svg class="nav-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M9 2V4M9 14V16M2 9H4M14 9H16M4.93 4.93L6.34 6.34M11.66 11.66L13.07 13.07M4.93 13.07L6.34 11.66M11.66 6.34L13.07 4.93" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span class="nav-label">Focus Sessions</span>
         </button>
         <button class="nav-item" data-tab="privacy">
           <span class="nav-icon privacy-icon"></span>
@@ -127,6 +197,52 @@
             <div id="dashboard-weekly" class="weekly-summary">
               <div class="empty-state">
                 <p>Weekly data will appear here after a few days of tracking.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Goals Tab -->
+        <div class="tab-content" id="goals-tab">
+          <section class="card">
+            <div class="card-header">
+              <h3>Your Goals</h3>
+              <p>Set time limits to help you stay accountable.</p>
+            </div>
+            
+            <div id="goals-list" class="goals-list">
+              <div class="empty-state">
+                <div class="empty-icon">🎯</div>
+                <p>No goals set yet. Add one to get started!</p>
+              </div>
+            </div>
+            
+            <div class="add-goal-section mt-24">
+              <h4>Add New Goal</h4>
+              <div class="goal-form">
+                <div class="form-row">
+                  <label>Goal Type</label>
+                  <select id="goal-type" class="input-modern">
+                    <option value="daily_limit">Daily Total Limit</option>
+                    <option value="site_limit">Site-Specific Limit</option>
+                    <option value="weekly_limit">Weekly Limit</option>
+                  </select>
+                </div>
+                <div class="form-row" id="goal-site-row" style="display: none;">
+                  <label>Site</label>
+                  <select id="goal-site" class="input-modern">
+                    <option value="">Select a site...</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label>Time Limit (minutes)</label>
+                  <input type="number" id="goal-target" class="input-modern" value="60" min="5" max="480">
+                </div>
+                <div class="form-row">
+                  <label>Goal Name</label>
+                  <input type="text" id="goal-name" class="input-modern" placeholder="e.g., Daily Distraction Limit">
+                </div>
+                <button id="add-goal-btn" class="btn btn-primary">Add Goal</button>
               </div>
             </div>
           </section>
@@ -218,6 +334,17 @@
               </div>
             </div>
 
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Snooze Duration</h4>
+                <p>How long to snooze popups when dismissed (minutes).</p>
+              </div>
+              <div class="input-stepper">
+                <input type="number" id="snooze-duration" min="1" max="30" value="5">
+                <span class="unit">min</span>
+              </div>
+            </div>
+
             <div class="setting-row border-none">
               <div class="setting-info">
                 <h4>AI Synthesis</h4>
@@ -227,6 +354,179 @@
                 <input type="checkbox" id="ai-enabled">
                 <span class="toggle-switch-modern"></span>
               </label>
+            </div>
+          </section>
+        </div>
+
+        <!-- Schedule Tab -->
+        <div class="tab-content" id="schedule-tab">
+          <section class="card">
+            <div class="card-header">
+              <h3>Quiet Hours</h3>
+              <p>Set times when popups should be suppressed.</p>
+            </div>
+            
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Enable Quiet Hours</h4>
+                <p>No intervention popups during quiet hours.</p>
+              </div>
+              <label class="toggle-modern">
+                <input type="checkbox" id="quiet-hours-enabled">
+                <span class="toggle-switch-modern"></span>
+              </label>
+            </div>
+            
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Quiet Hours Start</h4>
+                <p>When quiet hours begin.</p>
+              </div>
+              <input type="time" id="quiet-hours-start" class="input-modern" value="22:00">
+            </div>
+            
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Quiet Hours End</h4>
+                <p>When quiet hours end.</p>
+              </div>
+              <input type="time" id="quiet-hours-end" class="input-modern" value="08:00">
+            </div>
+          </section>
+
+          <section class="card mt-24">
+            <div class="card-header">
+              <h3>Work Hours</h3>
+              <p>Be stricter during work hours.</p>
+            </div>
+            
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Enable Work Hours Mode</h4>
+                <p>Stricter thresholds during work hours.</p>
+              </div>
+              <label class="toggle-modern">
+                <input type="checkbox" id="work-hours-enabled">
+                <span class="toggle-switch-modern"></span>
+              </label>
+            </div>
+            
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Work Hours</h4>
+                <p>Define your work schedule.</p>
+              </div>
+              <div class="time-range">
+                <input type="time" id="work-hours-start" class="input-modern" value="09:00">
+                <span>to</span>
+                <input type="time" id="work-hours-end" class="input-modern" value="17:00">
+              </div>
+            </div>
+            
+            <div class="setting-row border-none">
+              <div class="setting-info">
+                <h4>Weekend Mode</h4>
+                <p>Be more lenient on weekends.</p>
+              </div>
+              <label class="toggle-modern">
+                <input type="checkbox" id="weekend-mode">
+                <span class="toggle-switch-modern"></span>
+              </label>
+            </div>
+          </section>
+        </div>
+
+        <!-- Focus Sessions Tab -->
+        <div class="tab-content" id="focus-tab">
+          <section class="card">
+            <div class="card-header">
+              <h3>Focus Sessions (Pomodoro)</h3>
+              <p>Track productive focus time with the Pomodoro technique.</p>
+            </div>
+            
+            <div id="focus-session-active" class="focus-session-card" style="display: none;">
+              <div class="focus-session-header">
+                <h4 id="focus-session-type">Focus Session</h4>
+                <span id="focus-session-timer" class="focus-timer-large">25:00</span>
+              </div>
+              <div class="focus-session-progress">
+                <div id="focus-progress-bar" class="focus-progress" style="width: 0%;"></div>
+              </div>
+              <div class="focus-session-actions">
+                <button id="focus-pause-btn" class="btn btn-secondary">Pause</button>
+                <button id="focus-stop-btn" class="btn btn-danger-modern">Stop</button>
+              </div>
+            </div>
+            
+            <div id="focus-session-start" class="focus-start-section">
+              <div class="focus-presets">
+                <button class="focus-preset-btn" data-duration="25">25 min</button>
+                <button class="focus-preset-btn" data-duration="45">45 min</button>
+                <button class="focus-preset-btn" data-duration="60">60 min</button>
+                <button class="focus-preset-btn custom" data-duration="custom">Custom</button>
+              </div>
+              <button id="start-focus-btn" class="btn btn-primary btn-large">Start Focus Session</button>
+            </div>
+          </section>
+
+          <section class="card mt-24">
+            <div class="card-header">
+              <h3>Today's Focus Stats</h3>
+              <p>Your focus session statistics for today.</p>
+            </div>
+            <div class="focus-stats-grid">
+              <div class="focus-stat">
+                <span class="focus-stat-value" id="focus-total-time">0m</span>
+                <span class="focus-stat-label">Total Focus Time</span>
+              </div>
+              <div class="focus-stat">
+                <span class="focus-stat-value" id="focus-sessions-count">0</span>
+                <span class="focus-stat-label">Sessions Completed</span>
+              </div>
+              <div class="focus-stat">
+                <span class="focus-stat-value" id="focus-streak">0</span>
+                <span class="focus-stat-label">Day Streak</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="card mt-24">
+            <div class="card-header">
+              <h3>Pomodoro Settings</h3>
+              <p>Customize your focus session durations.</p>
+            </div>
+            
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Focus Duration</h4>
+                <p>Default focus session length.</p>
+              </div>
+              <div class="input-stepper">
+                <input type="number" id="pomodoro-focus" min="5" max="90" value="25">
+                <span class="unit">min</span>
+              </div>
+            </div>
+            
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Short Break</h4>
+                <p>Break between focus sessions.</p>
+              </div>
+              <div class="input-stepper">
+                <input type="number" id="pomodoro-short-break" min="1" max="15" value="5">
+                <span class="unit">min</span>
+              </div>
+            </div>
+            
+            <div class="setting-row border-none">
+              <div class="setting-info">
+                <h4>Long Break</h4>
+                <p>Break after 4 focus sessions.</p>
+              </div>
+              <div class="input-stepper">
+                <input type="number" id="pomodoro-long-break" min="5" max="30" value="15">
+                <span class="unit">min</span>
+              </div>
             </div>
           </section>
         </div>
@@ -254,6 +554,19 @@
               </div>
             </div>
 
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Data Retention</h4>
+                <p>How long to keep tracking data.</p>
+              </div>
+              <select id="data-retention" class="input-modern">
+                <option value="30">30 days</option>
+                <option value="60">60 days</option>
+                <option value="90">90 days</option>
+                <option value="0">Unlimited</option>
+              </select>
+            </div>
+
             <div class="danger-zone">
               <div class="danger-info">
                 <h4>Reset or Migrate</h4>
@@ -261,9 +574,12 @@
               </div>
               <div class="danger-actions">
                 <button id="export-data-btn" class="btn btn-outline">Export JSON</button>
+                <button id="import-data-btn" class="btn btn-outline">Import</button>
                 <button id="clear-data-btn" class="btn btn-danger-modern">Wipe All Data</button>
               </div>
             </div>
+            
+            <input type="file" id="import-file-input" accept=".json" style="display: none;">
           </section>
 
           <div class="privacy-footer">
