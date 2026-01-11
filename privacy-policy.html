@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - Shame Clock</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      color: #667eea;
+      margin-bottom: 20px;
+      font-size: 32px;
+    }
+    
+    h2 {
+      color: #333;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      font-size: 24px;
+    }
+    
+    p {
+      margin-bottom: 15px;
+      color: #666;
+    }
+    
+    ul {
+      margin-left: 20px;
+      margin-bottom: 15px;
+      color: #666;
+    }
+    
+    li {
+      margin-bottom: 8px;
+    }
+    
+    .last-updated {
+      color: #999;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+    
+    .highlight {
+      background: #f0f4ff;
+      padding: 20px;
+      border-radius: 6px;
+      border-left: 4px solid #667eea;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Privacy Policy</h1>
+    <p class="last-updated">Last updated: January 2026</p>
+    
+    <div class="highlight">
+      <strong>TL;DR:</strong> Shame Clock stores all data locally on your device. We don't collect, transmit, or share any of your data with external servers. Everything stays on your computer.
+    </div>
+    
+    <h2>Data Collection</h2>
+    <p>Shame Clock collects the following information locally on your device:</p>
+    <ul>
+      <li><strong>Domain names</strong> of websites you visit that match your tracked sites list</li>
+      <li><strong>Time spent</strong> on each tracked domain (in milliseconds)</li>
+      <li><strong>Extension settings</strong> including your site preferences, persona selections, and popup configurations</li>
+    </ul>
+    
+    <h2>Data Storage</h2>
+    <p>All data collected by Shame Clock is stored locally on your device using the browser's local storage API. This data includes:</p>
+    <ul>
+      <li>Time tracking data (daily totals per domain)</li>
+      <li>Your custom site list</li>
+      <li>Extension configuration settings</li>
+    </ul>
+    <p>Data is automatically cleaned up after 30 days to prevent excessive storage usage.</p>
+    
+    <h2>Data Transmission</h2>
+    <p><strong>Shame Clock does not transmit any data to external servers.</strong> All processing, including AI message generation, happens locally on your device using local AI models.</p>
+    
+    <h2>Third-Party Services</h2>
+    <p>Shame Clock does not use any third-party analytics, tracking, or data collection services. The extension operates entirely offline and does not make any network requests except for:</p>
+    <ul>
+      <li>Loading the local AI model (if enabled) - this happens locally or from a CDN, but no user data is sent</li>
+      <li>Loading default site lists and persona prompts from the extension's bundled files</li>
+    </ul>
+    
+    <h2>Permissions</h2>
+    <p>Shame Clock requests the following browser permissions:</p>
+    <ul>
+      <li><strong>tabs</strong> - To detect which websites you're visiting</li>
+      <li><strong>storage</strong> - To save your settings and time tracking data locally</li>
+      <li><strong>notifications</strong> - To show browser notifications when appropriate</li>
+      <li><strong>activeTab</strong> - To access the current tab's URL for tracking</li>
+      <li><strong>host_permissions</strong> - To inject content scripts on tracked websites</li>
+    </ul>
+    <p>These permissions are necessary for the extension's core functionality and are used only for the purposes described above.</p>
+    
+    <h2>Your Rights</h2>
+    <p>You have full control over your data:</p>
+    <ul>
+      <li>You can view all tracked data in the extension popup</li>
+      <li>You can export your data at any time from the settings page</li>
+      <li>You can clear all data at any time from the settings page</li>
+      <li>You can disable tracking for specific sites or disable the extension entirely</li>
+    </ul>
+    
+    <h2>Children's Privacy</h2>
+    <p>Shame Clock does not knowingly collect data from children. Since all data is stored locally and no data is transmitted, there are no concerns about children's data being shared.</p>
+    
+    <h2>Changes to This Policy</h2>
+    <p>We may update this privacy policy from time to time. Any changes will be reflected in this document with an updated "Last updated" date. We encourage you to review this policy periodically.</p>
+    
+    <h2>Contact</h2>
+    <p>If you have any questions about this privacy policy or how Shame Clock handles your data, please review the extension's source code or contact the developer through the extension's support channels.</p>
+    
+    <h2>Compliance</h2>
+    <p>Shame Clock is designed to comply with:</p>
+    <ul>
+      <li>GDPR (General Data Protection Regulation)</li>
+      <li>CCPA (California Consumer Privacy Act)</li>
+      <li>Browser extension store policies (Chrome Web Store, Firefox Add-ons, Edge Add-ons)</li>
+    </ul>
+    <p>Since no data leaves your device, Shame Clock inherently complies with privacy regulations by design.</p>
+  </div>
+</body>
+</html>
+

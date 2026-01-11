@@ -1,0 +1,338 @@
+/* Shame Clock — Professional Popup Design */
+
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --bg-app: #f8fafc;
+  --bg-white: #ffffff;
+  --text-main: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border-light: #f1f5f9;
+  --border-strong: #e2e8f0;
+  --success: #10b981;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 360px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-app);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+}
+
+/* Header */
+.app-header {
+  height: 64px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-white);
+  border-bottom: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+}
+
+.header-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-small {
+  width: 28px;
+  height: 28px;
+  background: var(--primary);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.logo-small svg {
+  width: 16px;
+  height: 16px;
+}
+
+.brand-name {
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+
+/* Content */
+.app-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Stats Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat-card {
+  background: var(--bg-white);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Active Session Card */
+.active-session-card {
+  background: var(--bg-white);
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--primary);
+  box-shadow: 0 4px 20px rgba(79, 70, 229, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.session-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.active-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pulse {
+  width: 8px;
+  height: 8px;
+  background: var(--success);
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.active-indicator .label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--success);
+  text-transform: uppercase;
+}
+
+.session-domain {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-timer {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+/* History List */
+.history-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-white);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  transition: all 0.2s ease;
+}
+
+.activity-item:hover {
+  border-color: var(--border-strong);
+  background: #fcfdfe;
+}
+
+.site-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.site-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: #f1f5f9;
+}
+
+.site-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.site-duration {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* Empty State */
+.empty-state {
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 13px;
+}
+
+/* Footer */
+.app-footer {
+  padding: 16px 20px;
+  background: var(--bg-white);
+  border-top: 1px solid var(--border-light);
+}
+
+/* Buttons */
+.btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+  color: var(--text-main);
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background: #f1f5f9;
+  color: var(--primary);
+}
+
+/* Professional Settings/Gear Icon */
+.settings-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  color: currentColor;
+  transition: transform 0.2s ease;
+}
+
+.icon-btn:hover .settings-icon {
+  transform: rotate(90deg);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-app); }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }

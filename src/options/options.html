@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shame Clock — Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 2L12.5 7.5L18 10L12.5 12.5L10 18L7.5 12.5L2 10L7.5 7.5L10 2Z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">Shame Clock</span>
+          <span class="brand-version">v1.0.0</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="dashboard">
+          <svg class="nav-icon dashboard-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="10" y="2" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="2" y="10" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="10" y="10" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          <span class="nav-label">Dashboard</span>
+        </button>
+        <button class="nav-item" data-tab="sites">
+          <span class="nav-icon sites-icon"></span>
+          <span class="nav-label">Monitored Sites</span>
+        </button>
+        <button class="nav-item" data-tab="personas">
+          <span class="nav-icon personas-icon"></span>
+          <span class="nav-label">AI Personas</span>
+        </button>
+        <button class="nav-item" data-tab="popup">
+          <svg class="nav-icon settings-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 11.25C10.2426 11.25 11.25 10.2426 11.25 9C11.25 7.75736 10.2426 6.75 9 6.75C7.75736 6.75 6.75 7.75736 6.75 9C6.75 10.2426 7.75736 11.25 9 11.25Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14.625 9C14.625 9.225 14.625 9.45 14.5875 9.675L15.75 10.8375C15.9 10.9875 15.9375 11.2125 15.825 11.4L14.775 12.975C14.6625 13.1625 14.4375 13.2375 14.25 13.1625L12.7875 12.6375C12.45 12.9375 12.075 13.1625 11.6625 13.3125L11.4375 14.85C11.4 15.075 11.2125 15.225 10.9875 15.225H7.0125C6.7875 15.225 6.6 15.075 6.5625 14.85L6.3375 13.3125C5.925 13.1625 5.55 12.9375 5.2125 12.6375L3.75 13.1625C3.5625 13.2375 3.3375 13.1625 3.225 12.975L2.175 11.4C2.0625 11.2125 2.1 10.9875 2.25 10.8375L3.4125 9.675C3.375 9.45 3.375 9.225 3.375 9C3.375 8.775 3.375 8.55 3.4125 8.325L2.25 7.1625C2.1 7.0125 2.0625 6.7875 2.175 6.6L3.225 5.025C3.3375 4.8375 3.5625 4.7625 3.75 4.8375L5.2125 5.3625C5.55 5.0625 5.925 4.8375 6.3375 4.6875L6.5625 3.15C6.6 2.925 6.7875 2.775 7.0125 2.775H10.9875C11.2125 2.775 11.4 2.925 11.4375 3.15L11.6625 4.6875C12.075 4.8375 12.45 5.0625 12.7875 5.3625L14.25 4.8375C14.4375 4.7625 14.6625 4.8375 14.775 5.025L15.825 6.6C15.9375 6.7875 15.9 7.0125 15.75 7.1625L14.5875 8.325C14.625 8.55 14.625 8.775 14.625 9Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="nav-label">Behavior</span>
+        </button>
+        <button class="nav-item" data-tab="privacy">
+          <span class="nav-icon privacy-icon"></span>
+          <span class="nav-label">Privacy & Data</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <p>Stay focused, <br>stay human.</p>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <header class="content-header">
+        <div class="header-titles">
+          <h1 id="active-tab-title">Dashboard</h1>
+          <p id="active-tab-description">Comprehensive view of your browsing activity and time management insights.</p>
+        </div>
+        <div class="header-actions">
+          <p class="status-message" id="status-message"></p>
+          <button id="refresh-dashboard-btn" class="btn btn-secondary" style="display: none;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13.5 2.5C12.5 1.5 11.1 1 9.5 1C5.9 1 3 3.9 3 7.5M2.5 13.5C3.5 14.5 4.9 15 6.5 15C10.1 15 13 12.1 13 8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2.5 5.5L1 7L2.5 8.5M13.5 10.5L15 9L13.5 7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Refresh
+          </button>
+          <button id="save-btn" class="btn btn-primary">Save Changes</button>
+        </div>
+      </header>
+
+      <div class="scroll-container">
+        <!-- Dashboard Tab -->
+        <div class="tab-content active" id="dashboard-tab">
+          <section class="card">
+            <div class="card-header">
+              <h3>Today's Overview</h3>
+              <p>Your productivity snapshot for today</p>
+            </div>
+            <div class="dashboard-stats">
+              <div class="stat-large">
+                <span class="stat-label">Total Time Tracked</span>
+                <span class="stat-value-large" id="dashboard-total-time">0m</span>
+              </div>
+              <div class="stat-large">
+                <span class="stat-label">Sites Visited</span>
+                <span class="stat-value-large" id="dashboard-site-count">0</span>
+              </div>
+              <div class="stat-large">
+                <span class="stat-label">Average per Site</span>
+                <span class="stat-value-large" id="dashboard-avg-time">0m</span>
+              </div>
+              <div class="stat-large">
+                <span class="stat-label">Top Site</span>
+                <span class="stat-value-large" id="dashboard-top-site" style="font-size: 18px;">—</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="card mt-24">
+            <div class="card-header">
+              <h3>Site Activity Breakdown</h3>
+              <p>Time spent per monitored site today</p>
+            </div>
+            <div id="dashboard-sites-list" class="dashboard-list">
+              <div class="empty-state">
+                <div class="empty-icon">📊</div>
+                <p>No activity tracked yet today.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="card mt-24">
+            <div class="card-header">
+              <h3>Weekly Summary</h3>
+              <p>Your activity over the past 7 days</p>
+            </div>
+            <div id="dashboard-weekly" class="weekly-summary">
+              <div class="empty-state">
+                <p>Weekly data will appear here after a few days of tracking.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Sites Tab -->
+        <div class="tab-content" id="sites-tab">
+          <section class="card">
+            <div class="card-header">
+              <h3>Community Standards</h3>
+              <p>Commonly identified distractions enabled by default.</p>
+            </div>
+            <div id="default-sites-list" class="sites-grid"></div>
+          </section>
+
+          <section class="card mt-24">
+            <div class="card-header">
+              <h3>Custom Monitored Sites</h3>
+              <p>Add specific domains that personally distract you.</p>
+            </div>
+            <div class="add-site-box">
+              <input type="text" id="new-site-input" placeholder="e.g., news.ycombinator.com" class="input-modern">
+              <button id="add-site-btn" class="btn btn-secondary">Add domain</button>
+            </div>
+            <div id="user-sites-list" class="sites-list-modern"></div>
+          </section>
+        </div>
+
+        <!-- Personas Tab -->
+        <div class="tab-content" id="personas-tab">
+          <section class="card">
+            <div class="card-header">
+              <h3>Voice & Tone</h3>
+              <p>Choose the personas that resonate most with your motivation style.</p>
+            </div>
+            <div id="personas-list" class="personas-grid-modern"></div>
+          </section>
+        </div>
+
+        <!-- Behavior (Popup) Tab -->
+        <div class="tab-content" id="popup-tab">
+          <section class="card">
+            <div class="card-header">
+              <h3>Interaction Logic</h3>
+              <p>Configure how and when Shame Clock intervenes in your browsing.</p>
+            </div>
+            
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Active Intervention</h4>
+                <p>Enable or disable the popup overlays on monitored sites.</p>
+              </div>
+              <label class="toggle-modern">
+                <input type="checkbox" id="popup-enabled">
+                <span class="toggle-switch-modern"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Patience Threshold</h4>
+                <p>Minutes to wait on a site before the first intervention.</p>
+              </div>
+              <div class="input-stepper">
+                <input type="number" id="min-time-popup" min="1" max="60">
+                <span class="unit">min</span>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Attention Span</h4>
+                <p>How long the intervention message remains visible (seconds).</p>
+              </div>
+              <div class="input-stepper">
+                <input type="number" id="popup-duration" min="5" max="120">
+                <span class="unit">sec</span>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Cooldown Period</h4>
+                <p>Minutes between consecutive interventions on the same site.</p>
+              </div>
+              <div class="input-stepper">
+                <input type="number" id="popup-cooldown" min="1" max="60">
+                <span class="unit">min</span>
+              </div>
+            </div>
+
+            <div class="setting-row border-none">
+              <div class="setting-info">
+                <h4>AI Synthesis</h4>
+                <p>Use local AI to generate unique messages instead of static templates.</p>
+              </div>
+              <label class="toggle-modern">
+                <input type="checkbox" id="ai-enabled">
+                <span class="toggle-switch-modern"></span>
+              </label>
+            </div>
+          </section>
+        </div>
+
+        <!-- Privacy Tab -->
+        <div class="tab-content" id="privacy-tab">
+          <section class="card">
+            <div class="card-header">
+              <h3>Your Data Sovereignty</h3>
+              <p>Everything stays local. We don't have servers, so we can't see your data.</p>
+            </div>
+            
+            <div class="data-manifesto">
+              <div class="manifesto-item">
+                <span class="manifesto-bullet"></span>
+                <p><strong>Tracking:</strong> Only domains in your monitored list are tracked.</p>
+              </div>
+              <div class="manifesto-item">
+                <span class="manifesto-bullet"></span>
+                <p><strong>Storage:</strong> All time-logs are stored in your browser's local storage.</p>
+              </div>
+              <div class="manifesto-item">
+                <span class="manifesto-bullet"></span>
+                <p><strong>AI:</strong> Generation happens on your device using Transformers.js.</p>
+              </div>
+            </div>
+
+            <div class="danger-zone">
+              <div class="danger-info">
+                <h4>Reset or Migrate</h4>
+                <p>Take your data with you or wipe the slate clean.</p>
+              </div>
+              <div class="danger-actions">
+                <button id="export-data-btn" class="btn btn-outline">Export JSON</button>
+                <button id="clear-data-btn" class="btn btn-danger-modern">Wipe All Data</button>
+              </div>
+            </div>
+          </section>
+
+          <div class="privacy-footer">
+            <p>Read our commitment to <a href="privacy-policy.html" target="_blank">Privacy & Ethics</a></p>
+            <button id="reset-btn" class="btn btn-link">Reset to Factory Defaults</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>

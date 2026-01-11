@@ -1,0 +1,75 @@
+[
+  {
+    "domain": "facebook.com",
+    "name": "Facebook",
+    "category": "social_media",
+    "enabled": true
+  },
+  {
+    "domain": "twitter.com",
+    "name": "Twitter",
+    "category": "social_media",
+    "enabled": true
+  },
+  {
+    "domain": "x.com",
+    "name": "X (Twitter)",
+    "category": "social_media",
+    "enabled": true
+  },
+  {
+    "domain": "instagram.com",
+    "name": "Instagram",
+    "category": "social_media",
+    "enabled": true
+  },
+  {
+    "domain": "tiktok.com",
+    "name": "TikTok",
+    "category": "social_media",
+    "enabled": true
+  },
+  {
+    "domain": "reddit.com",
+    "name": "Reddit",
+    "category": "entertainment",
+    "enabled": true
+  },
+  {
+    "domain": "youtube.com",
+    "name": "YouTube",
+    "category": "entertainment",
+    "enabled": true
+  },
+  {
+    "domain": "netflix.com",
+    "name": "Netflix",
+    "category": "entertainment",
+    "enabled": true
+  },
+  {
+    "domain": "twitch.tv",
+    "name": "Twitch",
+    "category": "gaming",
+    "enabled": true
+  },
+  {
+    "domain": "discord.com",
+    "name": "Discord",
+    "category": "gaming",
+    "enabled": true
+  },
+  {
+    "domain": "9gag.com",
+    "name": "9GAG",
+    "category": "entertainment",
+    "enabled": true
+  },
+  {
+    "domain": "buzzfeed.com",
+    "name": "BuzzFeed",
+    "category": "entertainment",
+    "enabled": true
+  }
+]
+
