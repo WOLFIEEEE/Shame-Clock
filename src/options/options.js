@@ -12,6 +12,8 @@ import {
 import { DEFAULT_CONFIG, STORAGE_KEYS } from '../utils/config.js';
 import { getAllPersonas } from '../ai/personas.js';
 import { refreshSites } from '../utils/site-matcher.js';
+import { addTooltip, createHelpIcon, showSuccess, showError, showLoading, hideLoading, createEmptyState } from '../utils/ui-helpers.js';
+import { getAllPresets, applyPreset, detectPreset, PresetType } from '../utils/presets.js';
 
 // Browser API abstraction - ensure it's always available
 function getBrowserAPI() {
@@ -80,6 +82,12 @@ async function init() {
   renderGoals();
   renderSchedule();
   renderFocusStats();
+  renderPresets();
+  
+  // Add help tooltips after everything is rendered
+  setTimeout(() => {
+    addSettingsHelp();
+  }, 200);
 }
 
 // Check if onboarding is needed
@@ -375,18 +383,32 @@ async function renderDashboard() {
     const api = getBrowserAPI();
     if (!api || !api.runtime) {
       console.error('Browser API not available');
-      document.getElementById('dashboard-sites-list').innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">⚠️</div>
-          <p>Browser API not available. Please reload the extension.</p>
-        </div>
-      `;
+      const sitesList = document.getElementById('dashboard-sites-list');
+      const errorState = createEmptyState({
+        icon: '⚠️',
+        title: 'Browser API not available',
+        message: 'Please reload the extension to continue.',
+        actionText: 'Reload Extension',
+        actionCallback: () => {
+          window.location.reload();
+        }
+      });
+      sitesList.innerHTML = '';
+      sitesList.appendChild(errorState);
       return;
+    }
+    
+    // Show loading state
+    const sitesList = document.getElementById('dashboard-sites-list');
+    if (!sitesList.querySelector('.dashboard-item')) {
+      showLoading(sitesList, 'Loading dashboard...');
     }
     
     // Get today's stats
     const response = await api.runtime.sendMessage({ action: 'getTodayStats' });
     const stats = response.stats || [];
+    
+    hideLoading(sitesList);
     
     // Calculate total time
     const totalTimeMs = stats.reduce((sum, stat) => sum + stat.timeSpent, 0);
@@ -411,14 +433,18 @@ async function renderDashboard() {
     }
     
     // Render sites list
-    const sitesList = document.getElementById('dashboard-sites-list');
     if (stats.length === 0) {
-      sitesList.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">📊</div>
-          <p>No activity tracked yet today.</p>
-        </div>
-      `;
+      const emptyState = createEmptyState({
+        icon: '📊',
+        title: 'No activity yet today',
+        message: 'Visit a tracked site to start seeing your statistics here. We\'ll track time automatically!',
+        actionText: 'View Tracked Sites',
+        actionCallback: () => {
+          switchTab('sites');
+        }
+      });
+      sitesList.innerHTML = '';
+      sitesList.appendChild(emptyState);
     } else {
       sitesList.innerHTML = stats.map((stat, index) => {
         const percentage = totalTimeMs > 0 ? Math.round((stat.timeSpent / totalTimeMs) * 100) : 0;
@@ -491,12 +517,22 @@ async function renderDashboard() {
     }
   } catch (error) {
     console.error('Error rendering dashboard:', error);
-    document.getElementById('dashboard-sites-list').innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">⚠️</div>
-        <p>Error loading dashboard data. Please refresh the page.</p>
-      </div>
-    `;
+    const sitesList = document.getElementById('dashboard-sites-list');
+    hideLoading(sitesList);
+    
+    const errorState = createEmptyState({
+      icon: '⚠️',
+      title: 'Error loading dashboard',
+      message: 'There was an error loading your dashboard data. Please try refreshing.',
+      actionText: 'Refresh',
+      actionCallback: () => {
+        renderDashboard();
+      }
+    });
+    sitesList.innerHTML = '';
+    sitesList.appendChild(errorState);
+    
+    showError('Failed to load dashboard data');
   }
 }
 
@@ -859,6 +895,87 @@ async function renderPersonas() {
   });
 }
 
+// Add help tooltips to settings
+function addSettingsHelp() {
+  // Help text for each setting
+  const helpTexts = {
+    'popup-enabled': 'Enable or disable intervention popups on tracked sites. When disabled, tracking still works but no reminders will appear.',
+    'min-time-popup': 'How many minutes you can browse before the first reminder appears. Lower = more strict.',
+    'popup-duration': 'How long the reminder popup stays visible (in seconds). Longer = more persistent.',
+    'popup-cooldown': 'Minutes between consecutive reminders on the same site. Prevents popup spam.',
+    'snooze-duration': 'When you snooze a popup, how long before it can appear again (in minutes).',
+    'ai-enabled': 'Use AI to generate unique, personalized messages. If disabled, uses template messages.',
+    'quiet-hours-enabled': 'No popups during these hours. Perfect for sleep time!',
+    'work-hours-enabled': 'Stricter tracking during work hours. Lower thresholds = more reminders.',
+    'weekend-mode': 'Be more lenient on weekends. Allows more browsing time before reminders.',
+    'data-retention': 'How long to keep your tracking data. Older data is automatically deleted.',
+    'pomodoro-focus': 'Default focus session duration. Classic Pomodoro is 25 minutes.',
+    'pomodoro-short-break': 'Break duration between focus sessions.',
+    'pomodoro-long-break': 'Longer break after completing 4 focus sessions.'
+  };
+  
+  // Add help icons to all settings with help text
+  document.querySelectorAll('.setting-info').forEach(settingInfo => {
+    const inputId = settingInfo.closest('.setting-row')?.querySelector('input, select')?.id;
+    if (inputId && helpTexts[inputId]) {
+      // Check if help icon already exists
+      if (!settingInfo.querySelector('.help-icon')) {
+        const helpIcon = createHelpIcon(helpTexts[inputId]);
+        settingInfo.querySelector('h4')?.appendChild(helpIcon);
+      }
+    }
+  });
+}
+
+// Render presets
+async function renderPresets() {
+  try {
+    const presetsGrid = document.getElementById('presets-grid');
+    if (!presetsGrid) return;
+    
+    const presets = getAllPresets();
+    const currentConfig = await getConfig();
+    const currentPreset = detectPreset(currentConfig);
+    
+    presetsGrid.innerHTML = presets.map(preset => {
+      const isActive = preset.type === currentPreset;
+      return `
+        <div class="preset-card ${isActive ? 'active' : ''} ${preset.recommended ? 'recommended' : ''}" data-preset="${preset.type}">
+          <div class="preset-icon">${preset.icon}</div>
+          <div class="preset-content">
+            <h4 class="preset-name">
+              ${escapeHtml(preset.name)}
+              ${preset.recommended ? '<span class="preset-badge">Recommended</span>' : ''}
+            </h4>
+            <p class="preset-description">${escapeHtml(preset.description)}</p>
+          </div>
+          <button class="btn ${isActive ? 'btn-primary' : 'btn-secondary'} preset-apply-btn" data-preset="${preset.type}">
+            ${isActive ? '✓ Active' : 'Apply'}
+          </button>
+        </div>
+      `;
+    }).join('');
+    
+    // Add event listeners
+    presetsGrid.querySelectorAll('.preset-apply-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const presetType = e.target.dataset.preset;
+        try {
+          await applyPreset(presetType);
+          showSuccess(`${getAllPresets().find(p => p.type === presetType).name} applied!`);
+          renderPresets();
+          renderSettings();
+        } catch (error) {
+          console.error('Error applying preset:', error);
+          showError('Failed to apply preset');
+        }
+      });
+    });
+  } catch (error) {
+    console.error('Error rendering presets:', error);
+  }
+}
+
 // Render settings
 async function renderSettings() {
   const config = await getConfig();
@@ -869,6 +986,9 @@ async function renderSettings() {
   document.getElementById('popup-cooldown').value = Math.floor((config.popupCooldown || DEFAULT_CONFIG.popupCooldown) / 60000);
   document.getElementById('snooze-duration').value = Math.floor((config.snoozeDuration || DEFAULT_CONFIG.snoozeDuration) / 60000);
   document.getElementById('ai-enabled').checked = config.aiEnabled !== false;
+  
+  // Add help tooltips
+  setTimeout(() => addSettingsHelp(), 100);
   
   // Data retention
   const dataRetention = document.getElementById('data-retention');
@@ -926,15 +1046,21 @@ async function removeUserSite(site) {
 
 // Save settings
 async function saveSettings() {
-  const config = await getConfig();
-  
-  // Popup settings
-  config.popupEnabled = document.getElementById('popup-enabled').checked;
-  config.minTimeBeforePopup = parseInt(document.getElementById('min-time-popup').value) * 60000;
-  config.popupDuration = parseInt(document.getElementById('popup-duration').value) * 1000;
-  config.popupCooldown = parseInt(document.getElementById('popup-cooldown').value) * 60000;
-  config.snoozeDuration = parseInt(document.getElementById('snooze-duration').value) * 60000;
-  config.aiEnabled = document.getElementById('ai-enabled').checked;
+  try {
+    const saveBtn = document.getElementById('save-btn');
+    const originalText = saveBtn.textContent;
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+    
+    const config = await getConfig();
+    
+    // Popup settings
+    config.popupEnabled = document.getElementById('popup-enabled').checked;
+    config.minTimeBeforePopup = parseInt(document.getElementById('min-time-popup').value) * 60000;
+    config.popupDuration = parseInt(document.getElementById('popup-duration').value) * 1000;
+    config.popupCooldown = parseInt(document.getElementById('popup-cooldown').value) * 60000;
+    config.snoozeDuration = parseInt(document.getElementById('snooze-duration').value) * 60000;
+    config.aiEnabled = document.getElementById('ai-enabled').checked;
   
   // Data retention
   const dataRetention = document.getElementById('data-retention');
@@ -981,9 +1107,17 @@ async function saveSettings() {
   };
   await setStorageValue('focusSessions', focusState);
   
-  await refreshSites();
-  
-  showStatus('Preferences saved', 'success');
+    await refreshSites();
+    
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalText;
+    showSuccess('Settings saved successfully!');
+  } catch (error) {
+    console.error('Error saving settings:', error);
+    document.getElementById('save-btn').disabled = false;
+    document.getElementById('save-btn').textContent = 'Save Changes';
+    showError('Failed to save settings. Please try again.');
+  }
 }
 
 // Reset to defaults
@@ -1099,14 +1233,21 @@ async function clearAllData() {
 
 // Show status message
 function showStatus(message, type = '') {
-  const statusEl = document.getElementById('status-message');
-  statusEl.textContent = message;
-  statusEl.className = `status-message ${type}`;
-  
-  setTimeout(() => {
-    statusEl.textContent = '';
-    statusEl.className = 'status-message';
-  }, 3000);
+  if (type === 'success') {
+    showSuccess(message);
+  } else if (type === 'error') {
+    showError(message);
+  } else {
+    // Use the status message element for info
+    const statusEl = document.getElementById('status-message');
+    statusEl.textContent = message;
+    statusEl.className = `status-message ${type}`;
+    
+    setTimeout(() => {
+      statusEl.textContent = '';
+      statusEl.className = 'status-message';
+    }, 3000);
+  }
 }
 
 // Escape HTML

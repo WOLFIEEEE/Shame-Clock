@@ -1,10 +1,13 @@
 // Popup UI logic
+import { showLoading, hideLoading, showSuccess, showError, showInfo, createEmptyState, showStatusIndicator } from '../utils/ui-helpers.js';
+
 const browserAPI = typeof chrome !== 'undefined' && chrome.runtime ? chrome : browser;
 
 // State
 let isPaused = false;
 let hasGoals = false;
 let focusSessionActive = false;
+let isLoading = false;
 
 // Format time for summary display
 function formatTime(ms) {
@@ -29,18 +32,16 @@ function formatLiveTime(ms) {
   return `${minutes}m ${seconds}s`;
 }
 
-// Show toast message
+// Show toast message (using ui-helpers)
 function showToast(message, type = 'info') {
-  const toast = document.getElementById('status-toast');
-  const toastMessage = document.getElementById('toast-message');
-  
-  toastMessage.textContent = message;
-  toast.className = `status-toast ${type}`;
-  toast.style.display = 'flex';
-  
-  setTimeout(() => {
-    toast.style.display = 'none';
-  }, 3000);
+  // Use the imported showToast from ui-helpers
+  if (type === 'success') {
+    showSuccess(message);
+  } else if (type === 'error') {
+    showError(message);
+  } else {
+    showInfo(message);
+  }
 }
 
 // Check if onboarding is needed
@@ -96,15 +97,27 @@ function updatePauseUI(paused) {
 // Toggle pause/resume
 async function togglePause() {
   try {
+    const pauseBtn = document.getElementById('pause-btn');
+    pauseBtn.disabled = true;
+    
     const newState = !isPaused;
     await browserAPI.runtime.sendMessage({ 
       action: newState ? 'pauseTracking' : 'resumeTracking' 
     });
     updatePauseUI(newState);
-    showToast(newState ? 'Tracking paused' : 'Tracking resumed', 'success');
+    
+    // Update status indicator
+    const statusContainer = document.querySelector('.app-header');
+    if (statusContainer) {
+      showStatusIndicator(newState ? 'paused' : 'active', statusContainer);
+    }
+    
+    showSuccess(newState ? 'Tracking paused' : 'Tracking resumed');
+    pauseBtn.disabled = false;
   } catch (error) {
     console.error('Error toggling pause:', error);
-    showToast('Failed to update tracking state', 'error');
+    showError('Failed to update tracking state');
+    document.getElementById('pause-btn').disabled = false;
   }
 }
 
@@ -152,15 +165,35 @@ async function loadGoalProgress() {
 
 // Load and display stats
 async function loadStats() {
+  if (isLoading) return; // Prevent concurrent loads
+  
   try {
+    isLoading = true;
+    const sitesList = document.getElementById('sites-list');
+    
+    // Show loading state only if list is empty
+    if (!sitesList.querySelector('.activity-item') && !sitesList.querySelector('.loading-spinner')) {
+      showLoading(sitesList, 'Loading your stats...');
+    }
+    
     // Get config to check pause state
     const configResponse = await browserAPI.runtime.sendMessage({ action: 'getConfig' });
     const config = configResponse.config || {};
     updatePauseUI(config.trackingPaused || false);
     
+    // Show status indicator
+    const statusContainer = document.querySelector('.app-header');
+    if (statusContainer && !config.trackingPaused) {
+      showStatusIndicator('active', statusContainer);
+    } else if (statusContainer) {
+      showStatusIndicator('paused', statusContainer);
+    }
+    
     // Get today's stats
     const response = await browserAPI.runtime.sendMessage({ action: 'getTodayStats' });
     const stats = response.stats || [];
+    
+    hideLoading(sitesList);
     
     // Calculate total time
     const totalTimeMs = stats.reduce((sum, stat) => sum + stat.timeSpent, 0);
@@ -168,14 +201,18 @@ async function loadStats() {
     document.getElementById('tracked-count').textContent = stats.length;
     
     // Display sites list
-    const sitesList = document.getElementById('sites-list');
     if (stats.length === 0) {
-      sitesList.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">☕</div>
-          <p>No distractions tracked yet.</p>
-        </div>
-      `;
+      const emptyState = createEmptyState({
+        icon: '☕',
+        title: 'No distractions yet',
+        message: 'Visit a tracked site (like YouTube or Reddit) to start tracking your time. We\'ll help you stay mindful!',
+        actionText: 'Open Settings',
+        actionCallback: () => {
+          browserAPI.runtime.openOptionsPage();
+        }
+      });
+      sitesList.innerHTML = '';
+      sitesList.appendChild(emptyState);
     } else {
       sitesList.innerHTML = stats.map(stat => {
         const domain = stat.domain;
@@ -222,8 +259,28 @@ async function loadStats() {
     // Load goal progress
     await loadGoalProgress();
     
+    isLoading = false;
   } catch (error) {
     console.error('Error loading stats:', error);
+    isLoading = false;
+    
+    const sitesList = document.getElementById('sites-list');
+    hideLoading(sitesList);
+    
+    // Show error state
+    const errorState = createEmptyState({
+      icon: '⚠️',
+      title: 'Unable to load stats',
+      message: 'There was an error loading your statistics. Please try refreshing or check if the extension is enabled.',
+      actionText: 'Reload',
+      actionCallback: () => {
+        loadStats();
+      }
+    });
+    sitesList.innerHTML = '';
+    sitesList.appendChild(errorState);
+    
+    showError('Failed to load statistics. Please try again.');
   }
 }
 
@@ -253,25 +310,40 @@ async function loadFocusStatus() {
 // Start focus session
 async function startFocusSession() {
   try {
+    const btn = document.getElementById('focus-start-btn');
+    btn.disabled = true;
+    btn.textContent = 'Starting...';
+    
     await browserAPI.runtime.sendMessage({ action: 'startFocusSession' });
     focusSessionActive = true;
-    showToast('Focus session started!', 'success');
-    loadFocusStatus();
+    showSuccess('Focus session started! 🎯');
+    await loadFocusStatus();
+    
+    btn.disabled = false;
   } catch (error) {
     console.error('Error starting focus session:', error);
-    showToast('Failed to start focus session', 'error');
+    showError('Failed to start focus session');
+    document.getElementById('focus-start-btn').disabled = false;
+    document.getElementById('focus-start-btn').textContent = 'Start Focus';
   }
 }
 
 // Stop focus session
 async function stopFocusSession() {
   try {
+    const btn = document.getElementById('focus-stop-btn');
+    btn.disabled = true;
+    
     await browserAPI.runtime.sendMessage({ action: 'stopFocusSession' });
     focusSessionActive = false;
-    showToast('Focus session ended', 'info');
-    loadFocusStatus();
+    showSuccess('Focus session completed! Great work! 🎉');
+    await loadFocusStatus();
+    
+    btn.disabled = false;
   } catch (error) {
     console.error('Error stopping focus session:', error);
+    showError('Failed to stop focus session');
+    document.getElementById('focus-stop-btn').disabled = false;
   }
 }
 

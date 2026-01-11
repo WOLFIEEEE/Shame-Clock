@@ -11,6 +11,8 @@
   --border-light: #f1f5f9;
   --border-strong: #e2e8f0;
   --success: #10b981;
+  --error: #ef4444;
+  --warning: #f59e0b;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -277,6 +279,46 @@ body {
   font-size: 13px;
 }
 
+/* Enhanced Empty State */
+.empty-state-enhanced {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-state-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.empty-state-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+
+.empty-state-message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 20px;
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.empty-state-action {
+  margin-top: 8px;
+}
+
 /* Footer */
 .app-footer {
   padding: 16px 20px;
@@ -348,17 +390,12 @@ body {
   width: 100%;
   min-height: 500px;
   background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   border-radius: 0;
   overflow: hidden;
-}
-
-/* Ensure welcome screen takes full space when visible */
-.welcome-screen {
-  display: none;
 }
 
 .welcome-screen.show {
@@ -511,6 +548,151 @@ body {
 @keyframes slideDown {
   from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* UI Toast (from ui-helpers) */
+.ui-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 280px;
+  max-width: 400px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+}
+
+.ui-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ui-toast-success {
+  border-left: 4px solid var(--success);
+}
+
+.ui-toast-error {
+  border-left: 4px solid var(--error);
+}
+
+.ui-toast-info {
+  border-left: 4px solid var(--primary);
+}
+
+.ui-toast-warning {
+  border-left: 4px solid var(--warning);
+}
+
+.toast-icon {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.toast-message {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.toast-close:hover {
+  background: var(--border-light);
+  color: var(--text-main);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-light);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Status Indicator */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-indicator.status-active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-indicator.status-paused {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-indicator.status-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-indicator.status-loading {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.status-dot {
+  font-size: 8px;
+}
+
+.status-label {
+  font-size: 10px;
 }
 
 /* Goal Progress Card */

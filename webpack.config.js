@@ -37,6 +37,7 @@ module.exports = {
         { from: 'src/options/options.html', to: 'options/options.html' },
         { from: 'src/options/options.css', to: 'options/options.css' },
         { from: 'src/content/popup-overlay.css', to: 'content/popup-overlay.css' },
+        { from: 'src/utils/ui-helpers.css', to: 'utils/ui-helpers.css' },
         { from: 'privacy-policy.html', to: 'privacy-policy.html' },
         { from: 'data', to: 'data' },
         { from: 'src/assets/icons', to: 'assets/icons' }
@@ -52,6 +53,11 @@ module.exports = {
   },
   experiments: {
     topLevelAwait: true
+  },
+  performance: {
+    maxAssetSize: 2000000, // 2MB - AI model is large, this is expected
+    maxEntrypointSize: 2000000,
+    hints: 'warning' // Only show warnings, not errors
   }
 };
 

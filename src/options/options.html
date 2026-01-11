@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shame Clock — Settings</title>
   <link rel="stylesheet" href="options.css">
+  <link rel="stylesheet" href="../utils/ui-helpers.css">
 </head>
 <body>
   <!-- Onboarding Overlay -->
@@ -284,7 +285,18 @@
 
         <!-- Behavior (Popup) Tab -->
         <div class="tab-content" id="popup-tab">
-          <section class="card">
+          <!-- Quick Setup Presets -->
+          <section class="card" id="presets-section">
+            <div class="card-header">
+              <h3>Quick Setup</h3>
+              <p>Choose a preset to get started quickly, or customize below.</p>
+            </div>
+            <div class="presets-grid" id="presets-grid">
+              <!-- Presets will be rendered here -->
+            </div>
+          </section>
+          
+          <section class="card mt-24">
             <div class="card-header">
               <h3>Interaction Logic</h3>
               <p>Configure how and when Shame Clock intervenes in your browsing.</p>
