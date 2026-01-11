@@ -234,39 +234,53 @@ startPopupChecker();
 
 // Handle messages from content scripts and popup
 browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Use a flag to ensure sendResponse is only called once
+  let responseSent = false;
+  
+  const safeSendResponse = (data) => {
+    if (!responseSent) {
+      responseSent = true;
+      try {
+        sendResponse(data);
+      } catch (e) {
+        console.error('Error sending response:', e);
+      }
+    }
+  };
+  
   (async () => {
     try {
       switch (message.action) {
         case 'getTimeSpent':
           const timeSpent = await getTimeSpentToday(message.domain);
-          sendResponse({ timeSpent });
+          safeSendResponse({ timeSpent });
           break;
         
         case 'getTodayStats':
           const stats = await getTodayStats();
-          sendResponse({ stats });
+          safeSendResponse({ stats });
           break;
         
         case 'isTrackedSite':
           const tracked = await isTrackedSite(message.url);
-          sendResponse({ tracked: tracked !== null, site: tracked });
+          safeSendResponse({ tracked: tracked !== null, site: tracked });
           break;
         
         case 'refreshSites':
           await refreshSites();
-          sendResponse({ success: true });
+          safeSendResponse({ success: true });
           break;
         
         case 'generateMessage':
           // Import message generator dynamically
           const { generateMessage } = await import('../ai/message-generator.js');
           const messageData = await generateMessage(message.domain, message.timeSpent);
-          sendResponse(messageData);
+          safeSendResponse(messageData);
           break;
         
         case 'getConfig':
           const config = await getConfig();
-          sendResponse({ config });
+          safeSendResponse({ config });
           break;
         
         // Pause/Resume tracking
@@ -276,7 +290,7 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           pauseConfig.pausedAt = Date.now();
           await setStorageValue(STORAGE_KEYS.CONFIG, pauseConfig);
           await handleTabInactive();
-          sendResponse({ success: true, paused: true });
+          safeSendResponse({ success: true, paused: true });
           break;
         
         case 'resumeTracking':
@@ -294,13 +308,13 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           } catch (e) {
             console.error('Error resuming tracking:', e);
           }
-          sendResponse({ success: true, paused: false });
+          safeSendResponse({ success: true, paused: false });
           break;
         
         // Onboarding
         case 'getOnboardingState':
           const onboardingState = await getStorageValue('onboardingState');
-          sendResponse({ state: onboardingState || { completed: false, skipped: false } });
+          safeSendResponse({ state: onboardingState || { completed: false, skipped: false } });
           break;
         
         case 'skipOnboarding':
@@ -310,7 +324,7 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
             tutorialShown: true,
             firstInstallDate: Date.now()
           });
-          sendResponse({ success: true });
+          safeSendResponse({ success: true });
           break;
         
         case 'completeOnboarding':
@@ -320,7 +334,7 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
             tutorialShown: true,
             firstInstallDate: Date.now()
           });
-          sendResponse({ success: true });
+          safeSendResponse({ success: true });
           break;
         
         // Goals
@@ -328,9 +342,10 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           try {
             const { getAllGoalProgress } = await import('../utils/goals.js');
             const progress = await getAllGoalProgress();
-            sendResponse({ progress });
+            safeSendResponse({ progress });
           } catch (e) {
-            sendResponse({ progress: [] });
+            console.error('Error getting goal progress:', e);
+            safeSendResponse({ progress: [] });
           }
           break;
         
@@ -338,9 +353,10 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           try {
             const { getGoals } = await import('../utils/goals.js');
             const goals = await getGoals();
-            sendResponse({ goals });
+            safeSendResponse({ goals });
           } catch (e) {
-            sendResponse({ goals: { enabled: false, goals: [] } });
+            console.error('Error getting goals:', e);
+            safeSendResponse({ goals: { enabled: false, goals: [] } });
           }
           break;
         
@@ -348,9 +364,10 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           try {
             const { addGoal } = await import('../utils/goals.js');
             const newGoal = await addGoal(message.goal);
-            sendResponse({ success: true, goal: newGoal });
+            safeSendResponse({ success: true, goal: newGoal });
           } catch (e) {
-            sendResponse({ success: false, error: e.message });
+            console.error('Error adding goal:', e);
+            safeSendResponse({ success: false, error: e.message });
           }
           break;
         
@@ -358,9 +375,10 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           try {
             const { deleteGoal } = await import('../utils/goals.js');
             await deleteGoal(message.goalId);
-            sendResponse({ success: true });
+            safeSendResponse({ success: true });
           } catch (e) {
-            sendResponse({ success: false, error: e.message });
+            console.error('Error deleting goal:', e);
+            safeSendResponse({ success: false, error: e.message });
           }
           break;
         
@@ -369,9 +387,10 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           try {
             const { getSessionStatus } = await import('../utils/focus-sessions.js');
             const status = await getSessionStatus();
-            sendResponse({ status });
+            safeSendResponse({ status });
           } catch (e) {
-            sendResponse({ status: { active: false } });
+            console.error('Error getting focus status:', e);
+            safeSendResponse({ status: { active: false } });
           }
           break;
         
@@ -379,9 +398,10 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           try {
             const { startFocusSession } = await import('../utils/focus-sessions.js');
             const session = await startFocusSession(message.options || {});
-            sendResponse({ success: true, session });
+            safeSendResponse({ success: true, session });
           } catch (e) {
-            sendResponse({ success: false, error: e.message });
+            console.error('Error starting focus session:', e);
+            safeSendResponse({ success: false, error: e.message });
           }
           break;
         
@@ -389,9 +409,32 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           try {
             const { completeSession } = await import('../utils/focus-sessions.js');
             const session = await completeSession();
-            sendResponse({ success: true, session });
+            safeSendResponse({ success: true, session });
           } catch (e) {
-            sendResponse({ success: false, error: e.message });
+            console.error('Error stopping focus session:', e);
+            safeSendResponse({ success: false, error: e.message });
+          }
+          break;
+        
+        case 'pauseFocusSession':
+          try {
+            const { pauseFocusSession } = await import('../utils/focus-sessions.js');
+            const session = await pauseFocusSession();
+            safeSendResponse({ success: true, session });
+          } catch (e) {
+            console.error('Error pausing focus session:', e);
+            safeSendResponse({ success: false, error: e.message });
+          }
+          break;
+        
+        case 'resumeFocusSession':
+          try {
+            const { resumeFocusSession } = await import('../utils/focus-sessions.js');
+            const session = await resumeFocusSession();
+            safeSendResponse({ success: true, session });
+          } catch (e) {
+            console.error('Error resuming focus session:', e);
+            safeSendResponse({ success: false, error: e.message });
           }
           break;
         
@@ -400,9 +443,10 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           try {
             const { getScheduleSummary } = await import('../utils/scheduler.js');
             const summary = await getScheduleSummary();
-            sendResponse({ summary });
+            safeSendResponse({ summary });
           } catch (e) {
-            sendResponse({ summary: { enabled: false } });
+            console.error('Error getting scheduler status:', e);
+            safeSendResponse({ summary: { enabled: false } });
           }
           break;
         
@@ -410,9 +454,30 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           try {
             const { shouldSuppressPopups } = await import('../utils/scheduler.js');
             const suppress = await shouldSuppressPopups();
-            sendResponse({ suppress });
+            safeSendResponse({ suppress });
           } catch (e) {
-            sendResponse({ suppress: false });
+            console.error('Error checking popup suppression:', e);
+            safeSendResponse({ suppress: false });
+          }
+          break;
+        
+        case 'getScheduleConfig':
+          try {
+            const scheduleConfig = await getStorageValue('schedulerConfig');
+            safeSendResponse({ config: scheduleConfig || {} });
+          } catch (e) {
+            console.error('Error getting schedule config:', e);
+            safeSendResponse({ config: {} });
+          }
+          break;
+        
+        case 'saveScheduleConfig':
+          try {
+            await setStorageValue('schedulerConfig', message.config);
+            safeSendResponse({ success: true });
+          } catch (e) {
+            console.error('Error saving schedule config:', e);
+            safeSendResponse({ success: false, error: e.message });
           }
           break;
         
@@ -421,9 +486,10 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           try {
             const { getAnalytics } = await import('../utils/analytics.js');
             const analytics = await getAnalytics(message.period);
-            sendResponse({ analytics });
+            safeSendResponse({ analytics });
           } catch (e) {
-            sendResponse({ analytics: null, error: e.message });
+            console.error('Error getting analytics:', e);
+            safeSendResponse({ analytics: null, error: e.message });
           }
           break;
         
@@ -431,9 +497,10 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           try {
             const { getTrendAnalysis } = await import('../utils/analytics.js');
             const trend = await getTrendAnalysis(message.days || 30);
-            sendResponse({ trend });
+            safeSendResponse({ trend });
           } catch (e) {
-            sendResponse({ trend: null, error: e.message });
+            console.error('Error getting trend analysis:', e);
+            safeSendResponse({ trend: null, error: e.message });
           }
           break;
         
@@ -442,31 +509,154 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
           try {
             const { createBackup } = await import('../utils/backup.js');
             const result = await createBackup(message.name);
-            sendResponse({ success: true, backup: result });
+            safeSendResponse({ success: true, backup: result });
           } catch (e) {
-            sendResponse({ success: false, error: e.message });
+            console.error('Error creating backup:', e);
+            safeSendResponse({ success: false, error: e.message });
           }
           break;
         
         // Snooze
         case 'snoozePopups':
-          const snoozeUntil = Date.now() + (message.duration || 5 * 60 * 1000);
-          await setStorageValue(STORAGE_KEYS.SNOOZE_UNTIL, snoozeUntil);
-          sendResponse({ success: true, snoozeUntil });
+          try {
+            const snoozeUntil = Date.now() + (message.duration || 5 * 60 * 1000);
+            await setStorageValue(STORAGE_KEYS.SNOOZE_UNTIL, snoozeUntil);
+            safeSendResponse({ success: true, snoozeUntil });
+          } catch (e) {
+            console.error('Error snoozing popups:', e);
+            safeSendResponse({ success: false, error: e.message });
+          }
           break;
         
         case 'getSnoozeStatus':
-          const snoozeEnd = await getStorageValue(STORAGE_KEYS.SNOOZE_UNTIL);
-          const isSnoozed = snoozeEnd && Date.now() < snoozeEnd;
-          sendResponse({ snoozed: isSnoozed, until: snoozeEnd });
+          try {
+            const snoozeEnd = await getStorageValue(STORAGE_KEYS.SNOOZE_UNTIL);
+            const isSnoozed = snoozeEnd && Date.now() < snoozeEnd;
+            safeSendResponse({ snoozed: isSnoozed, until: snoozeEnd });
+          } catch (e) {
+            console.error('Error getting snooze status:', e);
+            safeSendResponse({ snoozed: false, until: null });
+          }
+          break;
+        
+        // Shortcuts
+        case 'getShortcuts':
+          try {
+            const shortcuts = await getStorageValue('shortcuts');
+            safeSendResponse({ shortcuts: shortcuts || {} });
+          } catch (e) {
+            console.error('Error getting shortcuts:', e);
+            safeSendResponse({ shortcuts: {} });
+          }
+          break;
+        
+        case 'saveShortcuts':
+          try {
+            await setStorageValue('shortcuts', message.shortcuts);
+            safeSendResponse({ success: true });
+          } catch (e) {
+            console.error('Error saving shortcuts:', e);
+            safeSendResponse({ success: false, error: e.message });
+          }
+          break;
+        
+        // Data management
+        case 'exportAllData':
+          try {
+            const { exportAllData } = await import('../utils/backup.js');
+            const data = await exportAllData();
+            safeSendResponse({ success: true, data });
+          } catch (e) {
+            console.error('Error exporting data:', e);
+            safeSendResponse({ success: false, error: e.message });
+          }
+          break;
+        
+        case 'importAllData':
+          try {
+            const { importAllData } = await import('../utils/backup.js');
+            await importAllData(message.data);
+            safeSendResponse({ success: true });
+          } catch (e) {
+            console.error('Error importing data:', e);
+            safeSendResponse({ success: false, error: e.message });
+          }
+          break;
+        
+        case 'clearAllData':
+          try {
+            await browserAPI.storage.local.clear();
+            safeSendResponse({ success: true });
+          } catch (e) {
+            console.error('Error clearing data:', e);
+            safeSendResponse({ success: false, error: e.message });
+          }
+          break;
+        
+        // Error handling
+        case 'getErrors':
+          try {
+            const { getErrorLog } = await import('../utils/error-handler.js');
+            const errors = await getErrorLog();
+            safeSendResponse({ errors });
+          } catch (e) {
+            console.error('Error getting errors:', e);
+            safeSendResponse({ errors: [] });
+          }
+          break;
+        
+        case 'clearErrors':
+          try {
+            const { clearErrorLog } = await import('../utils/error-handler.js');
+            await clearErrorLog();
+            safeSendResponse({ success: true });
+          } catch (e) {
+            console.error('Error clearing errors:', e);
+            safeSendResponse({ success: false, error: e.message });
+          }
+          break;
+        
+        // Performance
+        case 'getPerformanceMetrics':
+          try {
+            const { getPerformanceMetrics } = await import('../utils/performance.js');
+            const metrics = await getPerformanceMetrics();
+            safeSendResponse({ metrics });
+          } catch (e) {
+            console.error('Error getting performance metrics:', e);
+            safeSendResponse({ metrics: {} });
+          }
+          break;
+        
+        // i18n
+        case 'getI18nMessage':
+          try {
+            const { getMessage } = await import('../utils/i18n.js');
+            const msg = await getMessage(message.key, message.params);
+            safeSendResponse({ message: msg });
+          } catch (e) {
+            console.error('Error getting i18n message:', e);
+            safeSendResponse({ message: message.key });
+          }
+          break;
+        
+        case 'setLanguage':
+          try {
+            const { setLanguage } = await import('../utils/i18n.js');
+            await setLanguage(message.language);
+            safeSendResponse({ success: true });
+          } catch (e) {
+            console.error('Error setting language:', e);
+            safeSendResponse({ success: false, error: e.message });
+          }
           break;
         
         default:
-          sendResponse({ error: 'Unknown action' });
+          safeSendResponse({ error: 'Unknown action' });
       }
     } catch (error) {
       console.error('Error handling message:', error);
-      sendResponse({ error: error.message });
+      safeSendResponse({ error: error.message || 'Unknown error' });
     }
   })();
   
