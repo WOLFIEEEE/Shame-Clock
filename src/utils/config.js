@@ -1,88 +1,54 @@
-// Default configuration values
+// Default configuration values for Cold Email Warmer
 export const DEFAULT_CONFIG = {
-  // Popup settings
-  popupEnabled: true,
-  minTimeBeforePopup: 5 * 60 * 1000, // 5 minutes in milliseconds
-  popupDuration: 30 * 1000, // 30 seconds
-  popupCooldown: 3 * 60 * 1000, // 3 minutes between popups
-  
-  // Smart popup thresholds (in milliseconds)
-  thresholds: {
-    low: 5 * 60 * 1000,      // 5 minutes - no popup
-    medium: 15 * 60 * 1000,  // 15 minutes - popup every 10 minutes
-    high: 30 * 60 * 1000,    // 30 minutes - popup every 5 minutes
-    veryHigh: Infinity       // 30+ minutes - popup every 3 minutes
-  },
-  
-  // Popup intervals (in milliseconds)
-  intervals: {
-    medium: 10 * 60 * 1000,  // Every 10 minutes
-    high: 5 * 60 * 1000,     // Every 5 minutes
-    veryHigh: 3 * 60 * 1000  // Every 3 minutes
-  },
-  
-  // Persona settings
-  enabledPersonas: ['future_self', 'mom', 'historical_figures'],
-  personaWeights: {
-    future_self: 0.4,
-    mom: 0.3,
-    historical_figures: 0.3
-  },
+  // Personalization settings
+  defaultStyle: 'professional', // professional, casual, friendly, formal
+  autoPersonalize: false, // Automatically personalize on compose
+  personalizationDepth: 'basic', // basic, deep
   
   // AI settings
   aiEnabled: true,
   useLocalAI: true,
-  messageCacheSize: 10,
+  aiFallback: true,
   
-  // Tracking settings
-  trackAllSites: false,
-  resetDaily: true,
-  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  // Variants
+  generateVariants: true,
+  numVariants: 3,
   
-  // Pause/Resume
-  trackingPaused: false,
-  pausedAt: null,
-  pauseScheduledEnd: null,
+  // Subject lines
+  generateSubjectLines: true,
+  numSubjectLines: 5,
   
-  // Snooze settings
-  snoozeDuration: 5 * 60 * 1000, // 5 minutes default snooze
-  snoozeEnabled: true,
+  // Follow-ups
+  followUpEnabled: true,
+  defaultFollowUpSequence: 3, // Number of follow-ups
   
-  // Popup customization
-  popupPosition: 'top-right', // top-left, top-right, bottom-left, bottom-right, center
-  popupStyle: 'default', // default, minimal, detailed
-  popupSound: false,
-  popupSoundVolume: 0.5,
+  // Templates
+  defaultTemplate: 'cold-outreach',
+  
+  // Research
+  researchEnabled: true,
+  researchDepth: 'basic', // basic, deep
+  
+  // History
+  saveHistory: true,
+  maxHistoryItems: 100,
+  
+  // User info
+  userName: '',
+  userTitle: '',
+  userCompany: '',
+  userEmail: '',
   
   // Data retention
-  dataRetentionDays: 30,
-  autoCleanup: true,
-  
-  // Accessibility
-  highContrastMode: false,
-  reducedMotion: false,
-  fontSize: 'medium' // small, medium, large
+  dataRetentionDays: 90,
+  autoCleanup: true
 };
 
 export const STORAGE_KEYS = {
-  CONFIG: 'shameClockConfig',
-  TRACKED_SITES: 'trackedSites',
-  TIME_DATA: 'timeData',
-  USER_SITES: 'userSites',
-  LAST_POPUP_TIME: 'lastPopupTime',
-  LAST_POPUP_DOMAIN: 'lastPopupDomain',
-  DAILY_RESET: 'dailyReset',
-  // New keys
-  ONBOARDING_STATE: 'onboardingState',
-  ERROR_LOG: 'errorLog',
-  GOALS: 'userGoals',
-  SCHEDULER: 'schedulerConfig',
-  BACKUP_HISTORY: 'backupHistory',
-  FOCUS_SESSIONS: 'focusSessions',
-  SHORTCUTS: 'keyboardShortcuts',
-  I18N: 'i18nConfig',
-  SNOOZE_UNTIL: 'snoozeUntil',
-  PAGE_RULES: 'pageRules',
-  AI_MODEL_STATUS: 'aiModelStatus'
+  CONFIG: 'emailWarmerConfig',
+  EMAIL_HISTORY: 'emailHistory',
+  RESEARCH_CACHE: 'researchCache',
+  TEMPLATES: 'emailTemplates',
+  FOLLOW_UP_SEQUENCES: 'followUpSequences',
+  USAGE_STATS: 'usageStats'
 };
-

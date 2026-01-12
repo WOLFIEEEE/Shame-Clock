@@ -36,7 +36,7 @@ module.exports = {
         { from: 'src/popup/popup.css', to: 'popup/popup.css' },
         { from: 'src/options/options.html', to: 'options/options.html' },
         { from: 'src/options/options.css', to: 'options/options.css' },
-        { from: 'src/content/popup-overlay.css', to: 'content/popup-overlay.css' },
+        { from: 'src/content/email-warmer.css', to: 'content/email-warmer.css' },
         { from: 'src/utils/ui-helpers.css', to: 'utils/ui-helpers.css' },
         { from: 'privacy-policy.html', to: 'privacy-policy.html' },
         { from: 'data', to: 'data' },
@@ -55,9 +55,15 @@ module.exports = {
     topLevelAwait: true
   },
   performance: {
-    maxAssetSize: 2000000, // 2MB - AI model is large, this is expected
+    maxAssetSize: 2000000,
     maxEntrypointSize: 2000000,
-    hints: 'warning' // Only show warnings, not errors
-  }
+    hints: false
+  },
+  stats: {
+    warnings: false
+  },
+  ignoreWarnings: [
+    /node_modules/
+  ]
 };
 

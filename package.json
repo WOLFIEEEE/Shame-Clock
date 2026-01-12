@@ -1,7 +1,7 @@
 {
-  "name": "shame-clock-extension",
+  "name": "cold-email-warmer",
   "version": "1.0.0",
-  "description": "Tracks time on time-wasting sites with AI-generated guilt trips",
+  "description": "Personalizes cold emails with AI - 100% free, local AI",
   "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
@@ -15,8 +15,11 @@
   },
   "keywords": [
     "productivity",
-    "time-tracking",
-    "browser-extension"
+    "email",
+    "personalization",
+    "sales",
+    "browser-extension",
+    "local-ai"
   ],
   "author": "",
   "license": "MIT",

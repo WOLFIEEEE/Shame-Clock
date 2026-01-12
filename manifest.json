@@ -1,23 +1,31 @@
 {
   "manifest_version": 3,
-  "name": "Shame Clock",
+  "name": "Cold Email Warmer",
   "version": "1.0.0",
-  "description": "Tracks time on time-wasting sites with AI-generated guilt trips from your future self, mom, or historical figures",
+  "description": "Personalizes cold emails with AI - 100% free, local AI",
   "permissions": [
-    "tabs",
     "storage",
-    "notifications",
-    "activeTab"
+    "activeTab",
+    "tabs"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "https://mail.google.com/*",
+    "https://outlook.live.com/*",
+    "https://outlook.office.com/*",
+    "https://outlook.office365.com/*",
+    "https://www.linkedin.com/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js"
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "https://mail.google.com/*",
+        "https://outlook.live.com/*",
+        "https://outlook.office.com/*",
+        "https://outlook.office365.com/*"
+      ],
       "js": ["content/content-script.js"],
       "run_at": "document_idle",
       "all_frames": false
@@ -39,8 +47,16 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["content/popup-overlay.css"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "content/email-warmer.css",
+        "data/email-templates.json"
+      ],
+      "matches": [
+        "https://mail.google.com/*",
+        "https://outlook.live.com/*",
+        "https://outlook.office.com/*",
+        "https://outlook.office365.com/*"
+      ]
     }
   ],
   "content_security_policy": {
@@ -48,12 +64,8 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "shame-clock@extension",
-      "strict_min_version": "109.0",
-      "data_collection_permissions": {
-        "required": ["domain_names", "time_tracking"],
-        "optional": []
-      }
+      "id": "cold-email-warmer@extension",
+      "strict_min_version": "109.0"
     }
   }
 }

@@ -3,133 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shame Clock</title>
+  <title>Cold Email Warmer</title>
   <link rel="stylesheet" href="popup.css">
-  <link rel="stylesheet" href="../../utils/ui-helpers.css">
 </head>
 <body>
-  <div class="app-container" role="application" aria-label="Shame Clock Time Tracker">
-    <!-- Welcome Screen (shown on first install) -->
-    <div id="welcome-screen" class="welcome-screen">
-      <div class="welcome-content">
-        <div class="welcome-icon">⏰</div>
-        <h2>Welcome to Shame Clock</h2>
-        <p>Your personal accountability companion for mindful browsing.</p>
-        <button id="welcome-setup-btn" class="btn btn-primary">Set Up Now</button>
-        <button id="welcome-skip-btn" class="btn btn-link">Skip for now</button>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-main">
+        <div class="logo-small">🔥</div>
+        <span class="brand-name">Email Warmer</span>
       </div>
-    </div>
+      <button id="settings-btn" class="icon-btn" title="Settings">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M9 11.25C10.2426 11.25 11.25 10.2426 11.25 9C11.25 7.75736 10.2426 6.75 9 6.75C7.75736 6.75 6.75 7.75736 6.75 9C6.75 10.2426 7.75736 11.25 9 11.25Z" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M14.625 9C14.625 9.225 14.625 9.45 14.5875 9.675L15.75 10.8375C15.9 10.9875 15.9375 11.2125 15.825 11.4L14.775 12.975C14.6625 13.1625 14.4375 13.2375 14.25 13.1625L12.7875 12.6375C12.45 12.9375 12.075 13.1625 11.6625 13.3125L11.4375 14.85C11.4 15.075 11.2125 15.225 10.9875 15.225H7.0125C6.7875 15.225 6.6 15.075 6.5625 14.85L6.3375 13.3125C5.925 13.1625 5.55 12.9375 5.2125 12.6375L3.75 13.1625C3.5625 13.2375 3.3375 13.1625 3.225 12.975L2.175 11.4C2.0625 11.2125 2.1 10.9875 2.25 10.8375L3.4125 9.675C3.375 9.45 3.375 9.225 3.375 9C3.375 8.775 3.375 8.55 3.4125 8.325L2.25 7.1625C2.1 7.0125 2.0625 6.7875 2.175 6.6L3.225 5.025C3.3375 4.8375 3.5625 4.7625 3.75 4.8375L5.2125 5.3625C5.55 5.0625 5.925 4.8375 6.3375 4.6875L6.5625 3.15C6.6 2.925 6.7875 2.775 7.0125 2.775H10.9875C11.2125 2.775 11.4 2.925 11.4375 3.15L11.6625 4.6875C12.075 4.8375 12.45 5.0625 12.7875 5.3625L14.25 4.8375C14.4375 4.7625 14.6625 4.8375 14.775 5.025L15.825 6.6C15.9375 6.7875 15.9 7.0125 15.75 7.1625L14.5875 8.325C14.625 8.55 14.625 8.775 14.625 9Z" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </button>
+    </header>
 
-    <!-- Main App -->
-    <div id="main-app">
-      <header class="app-header" role="banner">
-        <div class="header-main">
-          <div class="logo-small" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M10 2L12.5 7.5L18 10L12.5 12.5L10 18L7.5 12.5L2 10L7.5 7.5L10 2Z" fill="currentColor"/>
-            </svg>
+    <main class="app-content">
+      <!-- Quick Personalize Section -->
+      <section class="personalize-section">
+        <h2 class="section-title">Quick Personalize</h2>
+        <div class="personalize-input-group">
+          <div class="input-row">
+            <label for="recipient-name">Name:</label>
+            <input type="text" id="recipient-name" class="input" placeholder="John Doe">
           </div>
-          <span class="brand-name" aria-label="Shame Clock">Shame Clock</span>
+          <div class="input-row">
+            <label for="recipient-email">Email:</label>
+            <input type="email" id="recipient-email" class="input" placeholder="john@company.com">
+          </div>
+          <div class="input-row">
+            <label for="recipient-company">Company:</label>
+            <input type="text" id="recipient-company" class="input" placeholder="Company Name">
+          </div>
+          <div class="input-row">
+            <label for="recipient-title">Job Title:</label>
+            <input type="text" id="recipient-title" class="input" placeholder="Job Title">
+          </div>
+          <button id="personalize-btn" class="btn btn-primary">Personalize Email</button>
         </div>
-        <nav class="header-actions" aria-label="Quick actions">
-          <button id="pause-btn" class="icon-btn" title="Pause/Resume Tracking" aria-label="Pause or resume tracking" aria-pressed="false">
-            <svg id="pause-icon" class="action-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-              <rect x="4" y="3" width="3" height="12" rx="1" fill="currentColor"/>
-              <rect x="11" y="3" width="3" height="12" rx="1" fill="currentColor"/>
-            </svg>
-            <svg id="play-icon" class="action-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" style="display: none;" aria-hidden="true">
-              <path d="M5 3.5L14 9L5 14.5V3.5Z" fill="currentColor"/>
-            </svg>
-          </button>
-          <button id="settings-btn" class="icon-btn" title="Settings" aria-label="Open settings">
-            <svg class="settings-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 11.25C10.2426 11.25 11.25 10.2426 11.25 9C11.25 7.75736 10.2426 6.75 9 6.75C7.75736 6.75 6.75 7.75736 6.75 9C6.75 10.2426 7.75736 11.25 9 11.25Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M14.625 9C14.625 9.225 14.625 9.45 14.5875 9.675L15.75 10.8375C15.9 10.9875 15.9375 11.2125 15.825 11.4L14.775 12.975C14.6625 13.1625 14.4375 13.2375 14.25 13.1625L12.7875 12.6375C12.45 12.9375 12.075 13.1625 11.6625 13.3125L11.4375 14.85C11.4 15.075 11.2125 15.225 10.9875 15.225H7.0125C6.7875 15.225 6.6 15.075 6.5625 14.85L6.3375 13.3125C5.925 13.1625 5.55 12.9375 5.2125 12.6375L3.75 13.1625C3.5625 13.2375 3.3375 13.1625 3.225 12.975L2.175 11.4C2.0625 11.2125 2.1 10.9875 2.25 10.8375L3.4125 9.675C3.375 9.45 3.375 9.225 3.375 9C3.375 8.775 3.375 8.55 3.4125 8.325L2.25 7.1625C2.1 7.0125 2.0625 6.7875 2.175 6.6L3.225 5.025C3.3375 4.8375 3.5625 4.7625 3.75 4.8375L5.2125 5.3625C5.55 5.0625 5.925 4.8375 6.3375 4.6875L6.5625 3.15C6.6 2.925 6.7875 2.775 7.0125 2.775H10.9875C11.2125 2.775 11.4 2.925 11.4375 3.15L11.6625 4.6875C12.075 4.8375 12.45 5.0625 12.7875 5.3625L14.25 4.8375C14.4375 4.7625 14.6625 4.8375 14.775 5.025L15.825 6.6C15.9375 6.7875 15.9 7.0125 15.75 7.1625L14.5875 8.325C14.625 8.55 14.625 8.775 14.625 9Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </nav>
-      </header>
-
-      <!-- Paused Banner -->
-      <div id="paused-banner" class="paused-banner" style="display: none;" role="alert" aria-live="polite">
-        <span class="paused-icon" aria-hidden="true">⏸️</span>
-        <span>Tracking is paused</span>
-        <button id="resume-from-banner" class="btn-small" aria-label="Resume tracking">Resume</button>
-      </div>
-
-      <!-- Status Toast -->
-      <div id="status-toast" class="status-toast" style="display: none;" role="status" aria-live="polite">
-        <span id="toast-message"></span>
-      </div>
-
-      <main class="app-content" role="main">
-        <!-- Goal Progress (if goals are set) -->
-        <div id="goal-progress-section" class="goal-progress-card" style="display: none;">
-          <div class="goal-header">
-            <span class="goal-label">Daily Goal</span>
-            <span id="goal-percentage" class="goal-percentage">0%</span>
-          </div>
-          <div class="goal-bar">
-            <div id="goal-progress-bar" class="goal-progress" style="width: 0%"></div>
-          </div>
-          <div class="goal-details">
-            <span id="goal-current">0m</span>
-            <span id="goal-target">/ 60m</span>
+        
+        <div id="personalize-result" class="personalize-result" style="display: none;">
+          <div class="result-label">Personalized Email:</div>
+          <div id="personalize-output" class="personalize-output"></div>
+          <div class="result-actions">
+            <button id="copy-personalized-btn" class="btn btn-secondary btn-small">Copy</button>
+            <button id="view-variants-btn" class="btn btn-secondary btn-small">View Variants</button>
+            <button id="generate-subjects-btn" class="btn btn-secondary btn-small">Subject Lines</button>
           </div>
         </div>
+      </section>
 
-        <!-- Summary Cards -->
-        <section class="stats-grid" aria-label="Today's statistics">
-          <div class="stat-card" role="group" aria-labelledby="total-time-label">
-            <span class="stat-label" id="total-time-label">Total Focused</span>
-            <span class="stat-value" id="total-time" aria-live="polite">0m</span>
-          </div>
-          <div class="stat-card" role="group" aria-labelledby="tracked-count-label">
-            <span class="stat-label" id="tracked-count-label">Active Sites</span>
-            <span class="stat-value" id="tracked-count" aria-live="polite">0</span>
-          </div>
-        </section>
+      <!-- Templates Section -->
+      <section class="templates-section">
+        <h2 class="section-title">Templates</h2>
+        <select id="template-select" class="template-select">
+          <option value="cold-outreach">Cold Outreach</option>
+          <option value="follow-up">Follow-up</option>
+          <option value="value-proposition">Value Proposition</option>
+          <option value="referral">Referral Request</option>
+          <option value="event">Event Invitation</option>
+          <option value="partnership">Partnership Proposal</option>
+        </select>
+      </section>
 
-        <!-- Current Session (Visible when on tracked site) -->
-        <div id="current-site-section" class="active-session-card" style="display: none;">
-          <div class="session-header">
-            <div class="active-indicator">
-              <span class="pulse"></span>
-              <span class="label">Live Session</span>
-            </div>
-            <span class="session-domain" id="current-site-name">...</span>
-          </div>
-          <div class="session-timer" id="current-site-time">0m 0s</div>
-        </div>
+      <!-- Recent Emails -->
+      <section class="history-section" id="history-section" style="display: none;">
+        <h2 class="section-title">Recent</h2>
+        <div id="history-list" class="history-list"></div>
+      </section>
+    </main>
 
-        <!-- Focus Session Quick Start -->
-        <div id="focus-section" class="focus-card" style="display: none;">
-          <div class="focus-header">
-            <span class="focus-title">🎯 Focus Session</span>
-            <span id="focus-timer" class="focus-timer">25:00</span>
-          </div>
-          <div class="focus-actions">
-            <button id="focus-start-btn" class="btn btn-focus">Start Focus</button>
-            <button id="focus-stop-btn" class="btn btn-focus-secondary" style="display: none;">Stop</button>
-          </div>
-        </div>
-
-        <!-- History List -->
-        <section class="history-section" aria-labelledby="activity-heading">
-          <h2 class="section-title" id="activity-heading">Today's Activity</h2>
-          <div id="sites-list" class="activity-list" role="list" aria-label="Sites visited today">
-            <div class="empty-state" role="status">
-              <div class="empty-icon" aria-hidden="true">☕</div>
-              <p>No distractions tracked yet.</p>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <footer class="app-footer" role="contentinfo">
-        <button id="view-settings-btn" class="btn btn-secondary" aria-label="Open dashboard and settings">Open Dashboard</button>
-      </footer>
-    </div>
+    <footer class="app-footer">
+      <button id="view-settings-btn" class="btn btn-secondary">Settings</button>
+    </footer>
   </div>
 
   <script type="module" src="popup.js"></script>

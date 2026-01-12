@@ -1,0 +1,33 @@
+{
+  "cold-outreach": {
+    "name": "Cold Outreach",
+    "subject": "Quick question about [Company]",
+    "body": "Hi [FirstName],\n\nI noticed you work at [Company] as a [JobTitle]. I'd love to connect about how we've helped similar companies [achieve goal].\n\nWould you be open to a quick 15-minute call?\n\nBest,\n[YourName]"
+  },
+  "follow-up": {
+    "name": "Follow-up",
+    "subject": "Following up - [Company]",
+    "body": "Hi [FirstName],\n\nJust following up on my previous email. I wanted to make sure you saw my message about [topic].\n\nWould you be interested in learning more?\n\nBest,\n[YourName]"
+  },
+  "value-proposition": {
+    "name": "Value Proposition",
+    "subject": "Quick question about [Company]",
+    "body": "Hi [FirstName],\n\nI saw that [Company] is [doing something]. We've helped similar companies [achieve result].\n\nI'd love to share how we can help [Company] [specific benefit].\n\nWould you be open to a brief conversation?\n\nBest,\n[YourName]"
+  },
+  "referral": {
+    "name": "Referral Request",
+    "subject": "Quick favor - [Company]",
+    "body": "Hi [FirstName],\n\nI hope this email finds you well. I'm reaching out because I'm looking to connect with [type of person] at [Company].\n\nWould you be able to make an introduction?\n\nThanks in advance!\n\nBest,\n[YourName]"
+  },
+  "event": {
+    "name": "Event Invitation",
+    "subject": "Invitation: [Event Name]",
+    "body": "Hi [FirstName],\n\nI wanted to personally invite you to [event name] on [date]. Given your role at [Company], I think you'd find it valuable.\n\nWould you be interested in attending?\n\nBest,\n[YourName]"
+  },
+  "partnership": {
+    "name": "Partnership Proposal",
+    "subject": "Partnership opportunity - [Company]",
+    "body": "Hi [FirstName],\n\nI'm reaching out because I think there's a great opportunity for [Company] and [YourCompany] to work together.\n\n[Brief description of partnership opportunity]\n\nWould you be open to exploring this?\n\nBest,\n[YourName]"
+  }
+}
+
